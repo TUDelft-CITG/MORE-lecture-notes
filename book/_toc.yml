@@ -22,7 +22,7 @@ parts:
       - file: data_assimilation/DA_overview.md
         title: Data Assimilation
         sections:
-         - file: data_assimilation/Da_basics.md
+         - file: data_assimilation/DA_basics.md
            title: Basics
     # - file: references.md
     # - file: changelog.md
