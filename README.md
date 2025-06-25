@@ -3,8 +3,8 @@
 Lecture notes from the course "CEGM2005 Probabilistic Modelling of real-world phenomena through ObseRvations and Elicitation (MORE)" for the students.
 
 ## Contributors
+- Elisa Ragno (Module Manager)
 - Patricia Mares Nasarre
-- Elisa Ragno
 - Oswaldo Morales Nápoles
 - Max Ramgraber
 - Anna Störiko
