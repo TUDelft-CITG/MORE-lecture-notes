@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <script src="https://unpkg.com/mathjs/lib/browser/math.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>  
+      <script src="https://d3js.org/d3.v4.min.js"></script>
+      <style>
+         body{
+         margin: 0; overflow: hidden;
+         font-family: Helvetica, sans-serif;
+         }
+        .slidermu {
+          position: absolute;
+          accent-color: #fac205
+        }
+        .slidersd {
+          position: absolute;
+          accent-color: #ff5000
+        }
+        .sliderValue {
+          position: absolute;
+        }
+      </style>
+   </head>
+   <!-- Create a div where the graph will take place -->
+   <div id="my_datavisualization">
+      <svg id="click" xmlns="http://www.w3.org/2000/svg">
+      </svg>
+      
+    <input type="range" min="-200" max="200" value="0" class="slidermu" id="slider_mu">
+    <input type="range" min="0" max="200" value="100" class="slidersd" id="slider_sd">
+      
+   </div>
+   <body>
+      <script>
+          // Get the viewport height and width
+          const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
+          const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
+
+          var height  	= vh;
+          var width 		= vw;
+
+          const aspect 	= 1.8;
+
+          if (vw/aspect < vh) {
+            // Viewport width is limiting
+            var width 	= vw;
+            var height 	= vw/aspect;
+          } else {
+            // Viewport height is limiting
+            var width 	= vh*aspect;
+            var height 	= vh;
+          }
+
+         
+         var mu = 0;
+         var sd = 1;
+         
+         // Create the canvas. We will use only part of it for the main plot
+         var svg = d3.select("#click") // This selects the div
+             .attr("width", width) // This defines the canvas' width
+             .attr("height", height) // This defines the canvas' height
+             
+         function linspace(start, end, resolution) {
+             var spacing = [];
+             // Go through a for-loop
+             var i;
+             for (i = 0; i < resolution; i++) {
+                 spacing.push(start + (end - start) * i / (resolution - 1))
+             }
+             return spacing; // The function returns the linspace between p1 and p2
+         }
+         
+         function Gaussian_pdf(x,mu = 0, sd = 1) {
+             // Create a dummy variable
+             var result = [];
+             normalize = math.dotDivide(
+                 1,
+                 math.sqrt(
+                     math.dotMultiply(
+                         math.dotMultiply(
+                             2,
+                             math.PI),
+                         math.pow(
+                             sd,
+                             2))));
+         
+             var i;
+             for (i = 0; i < x.length; i++) {
+                 // Evaluate the first element of the Gaussian mixture
+                 expon = math.exp(
+                     -math.dotDivide(
+                         math.pow(
+                             x[i] - mu,
+                             2),
+                         math.dotMultiply(
+                             2,
+                             math.pow(
+                                 sd,
+                                 2))))
+                 temp = math.dotMultiply(
+                     normalize,
+                     expon)
+                 result.push(temp)
+             }
+             return result
+         }
+         
+         function Gaussian_cdf(x,mu = 0, sd = 1) {
+         
+            var result = [];
+            for (var i = 0; i < x.length; i++) {
+                var z = (x[i] - mu) / (sd * math.sqrt(2));
+                var temp = 0.5 * (1 + math.erf(z));
+                result.push(temp);
+            }
+            return result;
+         
+         }
+             
+         // Define a subplot for the standard normal
+         const x_limits = [-6, 6];
+         const y_limits_pdf = [0, 1 / math.sqrt(2 * math.pi) * 1.2];
+         
+         const window_x_pdf = [width * 0.1, width * 0.5];
+         const window_y_pdf = [height * 0.1, height * 0.8];
+         
+         // Get scaling functions for the x scale and the y_scale
+         const xScale_pdf = d3.scaleLinear()
+             .domain([x_limits[0], x_limits[1]])
+             .range(window_x_pdf)
+         const xScale_pdf_inverse = d3.scaleLinear()
+             .domain(window_x_pdf)
+             .range([x_limits[0], x_limits[1]])
+         const yScale_pdf = d3.scaleLinear()
+             .domain([y_limits_pdf[0], y_limits_pdf[1]])
+             .range([window_y_pdf[1], window_y_pdf[0]])
+         
+         // Draw the x axis
+         svg
+             .append("g")
+             .attr("transform", "translate(0," + window_y_pdf[1].toString() + ")")
+             .call(d3.axisBottom(xScale_pdf).ticks(5))
+             .style("font-size", (12 * width / 600).toString() + "px")
+         svg.append("text")
+             .attr("transform",
+                 "translate(" + (math.mean(window_x_pdf)).toString() + "," + (height * 0.9).toString() + ")")
+             .style("text-anchor", "middle")
+             .text("x")
+             .style("font-size", (12 * width / 600).toString() + "px")
+         
+         // Draw the y axis
+         svg
+             .append("g")
+             .attr("transform", "translate(" + (window_x_pdf[0]).toString() + ",0)")
+             .attr("id", "mainxaxis")
+             .call(d3.axisLeft(yScale_pdf))
+             .style("font-size", (12 * width / 600).toString() + "px");
+         svg.append("text")
+             .attr("transform",
+                 "translate(" + (width * 0.03).toString() + "," + (math.mean(window_y_pdf)).toString() + ") rotate(270)")
+             .style("text-anchor", "middle")
+             .text("probability density")
+             .style("font-size", (12 * width / 600).toString() + "px")
+         
+         // Draw the subplot label
+         svg.append("text")
+             .attr("transform",
+                 "translate(" + ((window_x_pdf[1] - window_x_pdf[0])/2 + window_x_pdf[0]).toString() + "," + (window_y_pdf[0]).toString() + ")")
+             .style("text-anchor", "middle")
+             .text("pdf")
+             .style("font-size", (16 * width / 600).toString() + "px")
+         
+         // Evaluate the normal pdf
+         var x = linspace(x_limits[0], x_limits[1], 201);
+         var pdf = Gaussian_pdf(x);
+         
+         // Get the data for the path
+         var data_pdf = [];
+         for (i = 0; i < x.length; i++) {
+             data_pdf.push({
+                 x: x[i],
+                 y: pdf[i]
+             })
+         }
+         
+         
+         var valueline_pdf = d3.svg.line()
+             .x(function(d) {
+                 return xScale_pdf(d.x);
+             })
+             .y(function(d) {
+                 return yScale_pdf(d.y);
+             });
+         
+         svg.append("path")
+             .attr("class", "line")
+             .attr("d", valueline_pdf(data_pdf))
+             .attr("fill", "none")
+             .attr("stroke-width", 3 * height / 600)
+             .attr("stroke", "#666666") //"#4794c1")
+             .attr("id", "pdf_line")
+         
+             
+         // Define a subplot for the standard normal
+         const y_limits_cdf = [0, 1];
+         const window_x_cdf = [width * 0.585, width * 0.985];
+         const window_y_cdf = [height * 0.1, height * 0.8];
+         
+         // Get scaling functions for the x scale and the y_scale
+         const xScale_cdf = d3.scaleLinear()
+             .domain([x_limits[0], x_limits[1]])
+             .range(window_x_cdf)
+         const xScale_cdf_inverse = d3.scaleLinear()
+             .domain(window_x_cdf)
+             .range([x_limits[0], x_limits[1]])
+         const yScale_cdf = d3.scaleLinear()
+             .domain([y_limits_cdf[0], y_limits_cdf[1]])
+             .range([window_y_cdf[1], window_y_cdf[0]])
+         
+         // Draw the x axis
+         svg
+             .append("g")
+             .attr("transform", "translate(0," + window_y_cdf[1].toString() + ")")
+             .call(d3.axisBottom(xScale_cdf).ticks(5))
+             .style("font-size", (12 * width / 600).toString() + "px")
+         svg.append("text")
+             .attr("transform",
+                 "translate(" + (math.mean(window_x_cdf)).toString() + "," + (height * 0.9).toString() + ")")
+             .style("text-anchor", "middle")
+             .text("x")
+             .style("font-family", "arial")
+             .style("font-size", (12 * width / 600).toString() + "px")
+         
+         // Draw the y axis
+         svg
+             .append("g")
+             .attr("transform", "translate(" + (window_x_cdf[0]).toString() + ",0)")
+             .attr("id", "mainxaxis")
+             .call(d3.axisLeft(yScale_cdf))
+             .style("font-size", (12 * width / 600).toString() + "px");
+         //.call(d3.axisLeft(yScale).tickFormat(""));
+         svg.append("text")
+             .attr("transform",
+                 "translate(" + (width * 0.525).toString() + "," + (math.mean(window_y_cdf)).toString() + ") rotate(270)")
+             .style("text-anchor", "middle")
+             .text("cumulative probability")
+             .style("font-size", (12 * width / 600).toString() + "px")
+         
+         // Draw the subplot label
+         svg.append("text")
+             .attr("transform",
+                 "translate(" + ((window_x_cdf[1] - window_x_cdf[0])/2 + window_x_cdf[0]).toString() + "," + (window_y_cdf[0]).toString() + ")")
+             .style("text-anchor", "middle")
+             .text("cdf")
+             .style("font-size", (16 * width / 600).toString() + "px")
+         
+         // Evaluate the normal pdf
+         var cdf = Gaussian_cdf(x);
+         
+         // Get the data for the path
+         var data_cdf = [];
+         for (i = 0; i < x.length; i++) {
+             data_cdf.push({
+                 x: x[i],
+                 y: cdf[i]
+             })
+         }
+         
+         var valueline_cdf = d3.svg.line()
+             .x(function(d) {
+                 return xScale_cdf(d.x);
+             })
+             .y(function(d) {
+                 return yScale_cdf(d.y);
+             });
+         
+         svg.append("path")
+             .attr("class", "line")
+             .attr("d", valueline_cdf(data_cdf))
+             .attr("fill", "none")
+             .attr("stroke-width", 3 * height / 600)
+             .attr("stroke", "#666666") //"#4794c1")
+             .attr("id", "cdf_line")
+
+         
+         
+          svg.append("text")
+            .attr("transform", "translate(" + (width * 0.15).toString() + "," + (height*0.9).toString() + ")")
+            .style("text-anchor", "middle")
+            .text("mean")
+            .style("font-size", (12 * width / 600).toString() + "px")
+          document.getElementById('slider_mu').style.left = (width*0.05).toString()+"px";
+          document.getElementById('slider_mu').style.top = (height*0.9).toString()+"px";
+          document.getElementById('slider_mu').style.width = (width*0.2).toString()+"px";
+          document.getElementById('slider_mu').style.height = (height*0.05).toString()+"px";
+          document.getElementById('slider_mu').style.fontSize = (16*width/600).toString()+"px";
+          const slidermu = document.getElementById("slider_mu");
+          var thumb = slidermu.getBoundingClientRect(); // Get the bounding rectangle of the slider
+          var thumbPosition = (slidermu.value - slidermu.min) / (slidermu.max - slidermu.min) * slidermu.offsetWidth;
+          
+          svg.append("text")
+            .attr("transform", "translate(" + (thumb.left + thumbPosition).toString() + "," + ( thumb.top + (thumb.height)*1.75).toString() + ")")
+            .style("text-anchor", "middle")
+            .text(d3.format(".2f")(0.))
+            .style("font-size", (12 * width / 600).toString() + "px")
+            .attr("id","thumb_label_mu")
+          
+          slidermu.addEventListener("input", function() {
+            mu = parseInt(this.value)/100;
+            var thumbPosition = (this.value - this.min) / (this.max - this.min) * this.offsetWidth;
+            update(mu,sd);
+            
+            var thumb = this.getBoundingClientRect(); // Get the bounding rectangle of the slider
+            
+						d3.select("#thumb_label_mu")
+              .attr("transform", "translate(" + (thumb.left + thumbPosition).toString() + "," + ( thumb.top + (thumb.height)*1.75).toString() + ")")
+              .text(d3.format(".2f")(mu))
+            
+
+          });
+          
+          
+          
+          
+          svg.append("text")
+            .attr("transform", "translate(" + (width * 0.45).toString() + "," + (height*0.9).toString() + ")")
+            .style("text-anchor", "middle")
+            .text("standard deviation")
+            .style("font-size", (12 * width / 600).toString() + "px")
+          document.getElementById('slider_sd').style.left = (width*0.35).toString()+"px";
+          document.getElementById('slider_sd').style.top = (height*0.9).toString()+"px";
+          document.getElementById('slider_sd').style.width = (width*0.2).toString()+"px";
+          document.getElementById('slider_sd').style.height = (height*0.05).toString()+"px";
+          document.getElementById('slider_sd').style.fontSize = (16*width/600).toString()+"px";
+          const slidersd = document.getElementById("slider_sd");
+          var thumb = slidersd.getBoundingClientRect(); // Get the bounding rectangle of the slider
+          var thumbPosition = (slidersd.value - slidersd.min) / (slidersd.max - slidersd.min) * slidersd.offsetWidth;
+          
+          svg.append("text")
+            .attr("transform", "translate(" + (thumb.left + thumbPosition).toString() + "," + ( thumb.top + (thumb.height)*1.75).toString() + ")")
+            .style("text-anchor", "middle")
+            .text(d3.format(".2f")(sd))
+            .style("font-size", (12 * width / 600).toString() + "px")
+            .attr("id","thumb_label_sd")
+          
+          slidersd.addEventListener("input", function() {
+            sd = parseInt(this.value)/100;
+            var thumbPosition = (this.value - this.min) / (this.max - this.min) * this.offsetWidth;
+            update(mu,sd);
+            
+            var thumb = this.getBoundingClientRect(); // Get the bounding rectangle of the slider
+            
+						d3.select("#thumb_label_sd")
+              .attr("transform", "translate(" + (thumb.left + thumbPosition).toString() + "," + ( thumb.top + (thumb.height)*1.75).toString() + ")")
+              .text(d3.format(".2f")(sd))
+            
+
+          });
+          
+          
+          
+          
+         
+         
+         
+         function update(mu,sd) {
+         
+						 // EValuate the new pdf
+             var pdf = Gaussian_pdf(x, mu, sd);
+
+             // Get the data for the path
+             var data_pdf = [];
+             for (i = 0; i < x.length; i++) {
+               data_pdf.push({
+                 x: x[i],
+                 y: pdf[i]
+               })
+             }
+						 
+             // Update the pdf path
+             d3.select("#pdf_line")
+               .attr("d", valueline_pdf(data_pdf))
+               
+             // Evaluate the normal cdf
+             var cdf = Gaussian_cdf(x,mu,sd);
+
+             // Get the data for the path
+             var data_cdf = [];
+             for (i = 0; i < x.length; i++) {
+                 data_cdf.push({
+                     x: x[i],
+                     y: cdf[i]
+                 })
+             }
+
+						 // Update the cdf path
+               d3.select("#cdf_line")
+                 .attr("d", valueline_cdf(data_cdf))
+
+
+         
+         }
+         
+         
+         
+      </script>
+   </body>
+</html>

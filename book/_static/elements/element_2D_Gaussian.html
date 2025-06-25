@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="Effect of correlation">
+    <title>2D Gaussian inference</title>
+    <script src="https://unpkg.com/mathjs/lib/browser/math.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pca-js@1.0.0/pca.min.js"></script>
+  </head>
+  <!-- Create a div where the graph will take place -->
+  <div id="my_dataviz">
+  
+  <svg id="click" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+          <g id="pointer">
+              <circle cx="0" cy="0" r="20" id="dragcircle" />
+          </g>
+      </defs>
+  </svg>
+    
+  </div>
+  
+    <style>
+      body{
+          margin: 0; overflow: hidden;
+          font-family: Helvetica, sans-serif;
+        }
+      .my_datavizdiv {
+          position: absolute;
+      }
+      svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        background-color: None
+      }
+      #myDropdown { 
+        position: absolute; 
+        top: 0; 
+        left: 0; 
+        font-family: Helvetica, sans-serif;
+      }
+      .slider {
+        position: absolute;
+        accent-color: #0485d1
+      }
+      .slidermu {
+        position: absolute;
+        accent-color: #fac205
+      }
+      .slidersd {
+        position: absolute;
+        accent-color: #ff5000
+      }
+      #sliderValue {
+        display: block;
+        text-align: center;
+        margin-top: 10px;
+        font-weight: bold;
+      }
+
+    </style>
+  
+  <!-- Create a div where the graph will take place -->
+  <body>
+    <script>
+      // ===================================================
+      // Set up basic viewport options
+      // ===================================================
+      
+      // Get the viewport height and width
+      const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
+      const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
+
+			var height  	= vh;
+      var width 		= vw;
+      
+      const aspect 	= 3;
+      
+      if (vw/aspect < vh) {
+      	// Viewport width is limiting
+        var width 	= vw;
+        var height 	= vw/aspect;
+      } else {
+      	// Viewport height is limiting
+      	var width 	= vh*aspect;
+        var height 	= vh;
+      }
+
+      // Create the canvas. We will use only part of it for the main plot
+      var svg = d3.select("#click") // This selects the div
+          .attr("width", width) // This defines the canvas' width
+          .attr("height", height) // This defines the canvas' height
+          
+      
+      var correlation = 0.7;
+      var sigma_x = 1;
+      var sigma_y = 1;
+      
+      var mu = [0, 0];
+      var cov = [
+        [sigma_x*sigma_x, sigma_x*sigma_y*correlation],
+        [sigma_y*sigma_x*correlation, sigma_y*sigma_y]
+      ];
+
+      const color_prior = "#fac205";
+      const color_likelihood = "#0485d1";
+      const color_observation = "#3f9b0b";
+      const color_posterior = "#f43605" //"#02c14d";
+      var xrange = [-3, 3];
+      var yrange = [-3, 3];
+      x_limits = xrange
+      y_limits = yrange
+      window_left_x = [width * 0.05, width * 0.05 + height*0.7 ];
+      window_left_y = [height * 0.1, height * 0.8];
+      
+  		// Create rectangles as a mask in the background
+      svg.append("rect")
+        .attr("x", 0)            // Set the rectangle x position
+        .attr("y", 0)            // Set the rectangle y position
+        .attr("width", width)       // Set the rectangle width
+        .attr("height", window_left_y[0])
+        .style("fill","white")
+        .style("opacity",0.9)
+        .attr("id","mask1")
+        .lower();     // Set the rectangle height
+      svg.append("rect")         
+        .attr("x", window_left_x[1])            // Set the rectangle x position     
+        .attr("y", window_left_y[0])            // Set the rectangle y position       
+        .attr("width", width)       // Set the rectangle width         
+        .attr("height", height-window_left_y[0])         
+        .style("fill","white")        
+        .style("opacity",0.9)
+        .attr("id","mask2")         
+        .lower();     // Set the rectangle height
+      svg.append("rect")
+        .attr("x", 0)            // Set the rectangle x position
+        .attr("y", window_left_y[1])            // Set the rectangle y position
+        .attr("width", window_left_x[1])       // Set the rectangle width
+        .attr("height", height - window_left_y[0])
+        .style("fill","white")
+        .style("opacity",0.9)
+        .attr("id","mask2")
+        .lower();     // Set the rectangle height
+      svg.append("rect")
+        .attr("x", 0)            // Set the rectangle x position
+        .attr("y", window_left_y[0])            // Set the rectangle y position
+        .attr("width", window_left_x[0])       // Set the rectangle width
+        .attr("height", window_left_y[1] - window_left_y[0])
+        .style("fill","white")
+        .style("opacity",0.9)
+        .attr("id","mask4")
+        .lower();     // Set the rectangle height
+      
+      // Get scaling functions for the x scale and the y_scale
+      const xScale_left = d3.scaleLinear().domain([x_limits[0], x_limits[1]]).range(window_left_x)
+      const xScale_inverse_left = d3.scaleLinear().domain(window_left_x).range([x_limits[0], x_limits[1]])
+      const yScale_left = d3.scaleLinear().domain([y_limits[0], y_limits[1]]).range([window_left_y[1], window_left_y[0]])
+      const yScale_inverse_left = d3.scaleLinear().domain([window_left_y[1], window_left_y[0]]).range([y_limits[0], y_limits[1]])
+      
+      // Add title
+      svg.append("text")
+      	.attr("transform", "translate(" + (math.mean(window_left_x)).toString() + "," + (height * 0.05).toString() + ")")
+        .style("text-anchor", "middle")
+        .text("density contours")
+        .style("font-size", (12 * width / 600).toString() + "px")
+      
+      // Draw the x axis
+      svg.append("g")
+      	.attr("transform", "translate(0," + window_left_y[1].toString() + ")")
+        .call(d3.axisBottom(xScale_left).ticks(7))
+        .style("font-size", (12 * width / 600).toString() + "px")
+      svg.append("text")
+      	.attr("transform", "translate(" + (math.mean(window_left_x)).toString() + "," + (height * 0.95).toString() + ")")
+        .style("text-anchor", "middle")
+        .text("X1")
+        .style("font-size", (12 * width / 600).toString() + "px")
+      
+      // Draw the y axis
+      svg.append("g")
+      	.attr("transform", "translate(" + (window_left_x[0]).toString() + ",0)")
+        .attr("id", "mainxaxis")
+        .call(d3.axisLeft(yScale_left).ticks(7))
+        .style("font-size", (12 * width / 600).toString() + "px");
+      svg.append("text")
+      	.attr("transform", "translate(" + (width * 0.02).toString() + "," + (math.mean(window_left_y)).toString() + ") rotate(270)")
+        .style("text-anchor", "middle")
+        .text("X2")
+        .style("font-size", (12 * width / 600).toString() + "px");
+
+      
+
+      
+      
+      
+      // Create the second subplot
+			window_right_x = [width * 0.38, width * 0.38 + height*0.7 ];
+      window_right_y = [height * 0.1, height * 0.8];
+      
+      // Get scaling functions for the x scale and the y_scale
+      const xScale_right = d3.scaleLinear().domain([x_limits[0], x_limits[1]]).range(window_right_x)
+      const xScale_inverse_right = d3.scaleLinear().domain(window_right_x).range([x_limits[0], x_limits[1]])
+      const yScale_right = d3.scaleLinear().domain([y_limits[0], y_limits[1]]).range([window_right_y[1], window_right_y[0]])
+      
+      // Add title
+      svg.append("text")
+      	.attr("transform", "translate(" + (math.mean(window_right_x)).toString() + "," + (height * 0.05).toString() + ")")
+        .style("text-anchor", "middle")
+        .text("samples")
+        .style("font-size", (12 * width / 600).toString() + "px")
+      
+      // Draw the x axis
+      svg.append("g")
+      	.attr("transform", "translate(0," + window_right_y[1].toString() + ")")
+        .call(d3.axisBottom(xScale_right).ticks(7))
+        .style("font-size", (12 * width / 600).toString() + "px")
+      svg.append("text")
+      	.attr("transform", "translate(" + (math.mean(window_right_x)).toString() + "," + (height * 0.95).toString() + ")")
+        .style("text-anchor", "middle")
+        .text("X1")
+        .style("font-size", (12 * width / 600).toString() + "px")
+      
+      // Draw the y axis
+      svg.append("g")
+      	.attr("transform", "translate(" + (window_right_x[0]).toString() + ",0)")
+        .attr("id", "mainxaxis")
+        .call(d3.axisLeft(yScale_right).ticks(7))
+        .style("font-size", (12 * width / 600).toString() + "px");
+      svg.append("text")
+      	.attr("transform", "translate(" + (width * 0.35).toString() + "," + (math.mean(window_right_y)).toString() + ") rotate(270)")
+        .style("text-anchor", "middle")
+        .text("X2")
+        .style("font-size", (12 * width / 600).toString() + "px");
+      
+      
+      // Draw 250 standard Gaussian samples
+      samples = [];
+      for (i = 0; i < 250; i++) {
+      	samples.push([gaussianRandom(),gaussianRandom()])
+        
+        svg.append("circle")
+          .attr("cx",xScale_right(samples[i][0]))
+          .attr("cy",yScale_right(samples[i][1]))
+          .attr("r",height*0.005)
+          .style("fill","#666")
+          .style("stroke","None")
+          .attr("id","scatter"+i.toString())
+          .attr("class","scatter")
+          .raise()
+        
+      }
+      
+      scatter_samples()
+      
+    
+
+      
+      // Create a handle for the mean
+      var handle_mean = svg.append("circle")
+      	.attr("cx", xScale_left(0))
+        .attr("cy", yScale_left(0))
+        .attr("r", height*0.035)
+        .attr("fill","#8c000f")
+        .call(d3.drag() // call specific function when circle is dragged
+           .on("drag", function() {
+      
+              // Get the movement and the current object
+              var movex = d3.event.x;
+              var movey = d3.event.y;
+              var current = d3.select(this);
+              
+              // Limit movex, if necessary
+              if (movex < window_left_x[0]) {
+              	movex = window_left_x[0]
+              } else if (movex > window_left_x[1]) {
+              	movex = window_left_x[1]
+              }
+              
+              // Limit movey, if necessary
+              if (movey < window_left_y[0]) {
+              	movey = window_left_y[0]
+              } else if (movey > window_left_y[1]) {
+              	movey = window_left_y[1]
+              }
+
+							// Update drag handle position
+              current.attr("cx", movex)
+              current.attr("cy", movey)
+
+              // Update mean
+              mu = [xScale_inverse_left(movex),yScale_inverse_left(movey)];
+              
+              // Update the other handles
+              d3.select("#handle_sigma_x").attr("cx",xScale_left(mu[0]+2*sigma_x))
+              d3.select("#handle_sigma_x").attr("cy",yScale_left(mu[1]))
+              d3.select("#handle_sigma_y").attr("cx",xScale_left(mu[0]))
+              d3.select("#handle_sigma_y").attr("cy",yScale_left(mu[1]+2*sigma_y))
+              d3.select("#handle_correlation").attr("cx",xScale_left(mu[0] + math.cos(correlation_to_angle(correlation))*1.5))
+              d3.select("#handle_correlation").attr("cy",yScale_left(mu[1] + math.sin(correlation_to_angle(correlation))*1.5))
+              
+              // Update the paths
+              d3.select("#line_correlation").attr("transform", "translate("+(xScale_left(mu[0])).toString()+","+(yScale_left(mu[1])).toString()+")")
+              d3.select("#line_sigma_x")
+                .attr("x1", xScale_left(mu[0]))
+                .attr("x2", xScale_left(mu[0] + 2*sigma_x))
+                .attr("y1", yScale_left(mu[1]))
+                .attr("y2", yScale_left(mu[1]));
+              d3.select("#line_sigma_y")
+                .attr("x1", xScale_left(mu[0]))
+                .attr("x2", xScale_left(mu[0]))
+                .attr("y1", yScale_left(mu[1]))
+                .attr("y2", yScale_left(mu[1] + 2*sigma_y));
+              
+              d3.select("#text-mean")
+                .text("("+d3.format(".2f")(mu[0])+","+d3.format(".2f")(mu[1])+")");
+              
+              
+              update();
+
+            }));
+           
+      // Create a handle for the sd_x
+      var handle_sigma_x = svg.append("circle")
+      	.attr("cx", xScale_left(2))
+        .attr("cy", yScale_left(0))
+        .attr("r", height*0.035)
+        .style("fill","#0485d1")
+        .attr("id", "handle_sigma_x")
+        .call(d3.drag() // call specific function when circle is dragged
+           .on("drag", function() {
+      
+              // Get the movement and the current object
+              var movex = d3.event.x;
+              var movey = d3.event.y;
+              var current = d3.select(this);
+              
+              // Limit movex, if necessary
+              if (movex < xScale_left(mu[0])) {
+              	movex = xScale_left(mu[0])
+              }
+
+							// Update drag handle position
+              current.attr("cx", movex)
+              
+              // Update std
+              sigma_x = (xScale_inverse_left(movex) - mu[0])/2;
+              
+              d3.select("#line_sigma_x")
+                .attr("x2", xScale_left(mu[0] + 2*sigma_x));
+                
+              d3.select("#text-sigma-x")
+                .text(d3.format(".2f")(sigma_x));
+
+              update();
+
+            }));
+            
+      svg.append("line")
+      	.attr("x1", xScale_left(0))
+        .attr("x2", xScale_left(2))
+      	.attr("y1", yScale_left(0))
+        .attr("y2", yScale_left(0))
+        .attr("stroke-width", height*0.0075)
+        .style("stroke","#0485d1")
+        .lower()
+        .attr("id","line_sigma_x");
+
+      // Create a handle for the sd_x
+      var handle_sigma_y = svg.append("circle")
+      .attr("cx", xScale_left(0))
+      .attr("cy", yScale_left(2))
+      .attr("r", height*0.035)
+      .style("fill","#dbb40c")
+      .attr("id", "handle_sigma_y")
+      .call(d3.drag() // call specific function when circle is dragged
+            .on("drag", function() {
+
+        // Get the movement and the current object
+        var movex = d3.event.x;
+        var movey = d3.event.y;
+        var current = d3.select(this);
+
+        // Limit movey, if necessary
+        if (movey > yScale_left(mu[1])) {
+          movey = yScale_left(mu[1])
+        }
+
+        // Update drag handle position
+        current.attr("cy", movey)
+
+        // Update std
+        sigma_y = (yScale_inverse_left(movey) - mu[1])/2;
+        
+        d3.select("#line_sigma_y")
+          .attr("y2", yScale_left(mu[1] + 2*sigma_y));
+          
+        d3.select("#text-sigma-y")
+          .text(d3.format(".2f")(sigma_y));
+
+        update();
+
+      }));
+      
+      svg.append("line")
+      	.attr("x1", xScale_left(0))
+        .attr("x2", xScale_left(0))
+      	.attr("y1", yScale_left(0))
+        .attr("y2", yScale_left(2))
+        .attr("stroke-width", height*0.0075)
+        .attr("stroke", "#dbb40c")
+        .lower()
+        .attr("id","line_sigma_y");
+      
+      // Define endpoint angles
+      const angle_right = -math.pi*0.25;
+      const angle_left = -math.pi*0.75;
+      
+      // Define a map from angle to correlation
+      const angle_to_correlation = d3.scaleLinear()
+        .domain([-math.pi*0.75,-math.pi*0.25])
+        .range([1,-1])
+      const correlation_to_angle = d3.scaleLinear()
+        .domain([1,-1])
+        .range([-math.pi*0.75,-math.pi*0.25])
+
+      // Create a handle for the correlation
+      var handle_correlation = svg.append("circle")
+        .attr("cx", xScale_left(mu[0] + math.cos(correlation_to_angle(correlation))*1.5))
+        .attr("cy", yScale_left(mu[1] + math.sin(correlation_to_angle(correlation))*1.5))
+        .attr("r", height*0.035)
+        .style("fill","#388004")
+        .attr("angle",0)
+        .attr("id", "handle_correlation")
+        .call(d3.drag() // call specific function when circle is dragged
+              .on("drag", function() {
+
+          // Get the movement and the current object
+          var movex = d3.event.x;
+          var movey = d3.event.y;
+          var current = d3.select(this);
+          
+          // Get the local position
+          var locpos_x = xScale_inverse_left(movex) - mu[0];
+          var locpos_y = yScale_inverse_left(movey) - mu[1];
+          
+          // Get the angle
+          var angle = math.atan2(locpos_y, locpos_x);
+          
+          // Get signed circular distance
+          var circdist = signedCircularDistance(-math.pi/2,angle);
+          
+          // Restrict angle
+          if (circdist < -45) {
+          	angle = -math.pi*0.75;
+          } else if (circdist > 45) {
+          	angle = -math.pi*0.25;
+          }
+          current.attr("angle",angle)
+          
+					// Update position of handle
+        	current.attr("cx", xScale_left(mu[0] + math.cos(angle)*1.5))
+          current.attr("cy", yScale_left(mu[1] + math.sin(angle)*1.5))
+          
+          // Convert angle to correlation
+          correlation = angle_to_correlation(angle);
+          
+          d3.select("#text-correlation")
+            .text(d3.format(".2f")(correlation));
+         
+          update();
+
+        }));
+        
+      const xoffset = width*0.05;
+        
+        
+      svg.append("text")
+      	.attr("transform", "translate(" + (width*0.65 + xoffset).toString() + "," + (height * 0.15).toString() + ")")
+        .style("text-anchor", "left")
+        .text("mean: ")
+        .style("fill","#8c000f")
+        .style("font-size", (12 * width / 600).toString() + "px")
+        
+      svg.append("text")
+      	.attr("transform", "translate(" + (width*0.775 + xoffset).toString() + "," + (height * 0.15).toString() + ")")
+        .style("text-anchor", "left")
+        .text("("+d3.format(".2f")(mu[0])+","+d3.format(".2f")(mu[1])+")")
+        .attr("id","text-mean")
+        .style("font-size", (12 * width / 600).toString() + "px")
+        
+      svg.append("text")
+      	.attr("transform", "translate(" + (width*0.65 + xoffset).toString() + "," + (height * 0.25).toString() + ")")
+        .style("text-anchor", "left")
+        .text("sigma X1: ")
+        .style("fill","#0485d1")
+        .style("font-size", (12 * width / 600).toString() + "px")
+        
+      svg.append("text")
+      	.attr("transform", "translate(" + (width*0.775 + xoffset).toString() + "," + (height * 0.25).toString() + ")")
+        .style("text-anchor", "left")
+        .text(d3.format(".2f")(sigma_x))
+        .attr("id","text-sigma-x")
+        .style("font-size", (12 * width / 600).toString() + "px")
+        
+      svg.append("text")
+      	.attr("transform", "translate(" + (width*0.65 + xoffset).toString() + "," + (height * 0.35).toString() + ")")
+        .style("text-anchor", "left")
+        .text("sigma X2: ")
+        .style("fill","#dbb40c")
+        .style("font-size", (12 * width / 600).toString() + "px")
+        
+      svg.append("text")
+      	.attr("transform", "translate(" + (width*0.775 + xoffset).toString() + "," + (height * 0.35).toString() + ")")
+        .style("text-anchor", "left")
+        .text(d3.format(".2f")(sigma_y))
+        .attr("id","text-sigma-y")
+        .style("font-size", (12 * width / 600).toString() + "px")
+        
+      svg.append("text")
+      	.attr("transform", "translate(" + (width*0.65 + xoffset).toString() + "," + (height * 0.45).toString() + ")")
+        .style("text-anchor", "left")
+        .text("correlation: ")
+        .style("fill","#388004")
+        .style("font-size", (12 * width / 600).toString() + "px")
+        
+      svg.append("text")
+      	.attr("transform", "translate(" + (width*0.775 + xoffset).toString() + "," + (height * 0.45).toString() + ")")
+        .style("text-anchor", "left")
+        .text(d3.format(".2f")(correlation))
+        .attr("id","text-correlation")
+        .style("font-size", (12 * width / 600).toString() + "px")
+        
+        
+      svg.append("text")
+      	.attr("transform", "translate(" + (width*0.65 + xoffset).toString() + "," + (height * 0.75).toString() + ")")
+        .style("text-anchor", "left")
+        .text("Σ")
+        .style("fill","black")
+        .style("font-size", (12 * width / 600).toString() + "px")
+        
+      svg.append("text")
+      	.attr("transform", "translate(" + (width*0.675 + xoffset).toString() + "," + (height * 0.75).toString() + ")")
+        .style("text-anchor", "left")
+        .text("=")
+        .style("fill","black")
+        .style("font-size", (12 * width / 600).toString() + "px")
+        
+      svg.append("line")
+      	.attr("x1", width*0.7 + xoffset)
+        .attr("x2", width*0.715 + xoffset)
+      	.attr("y1", height*0.575)
+        .attr("y2", height*0.575)
+        .attr("stroke-width", height*0.0075)
+        .attr("stroke", "black");
+      svg.append("line")
+      	.attr("x1", width*0.7 + xoffset)
+        .attr("x2", width*0.7 + xoffset)
+      	.attr("y1", height*0.925)
+        .attr("y2", height*0.575)
+        .attr("stroke-width", height*0.0075)
+        .attr("stroke", "black");
+      svg.append("line")
+      	.attr("x1", width*0.7 + xoffset)
+        .attr("x2", width*0.715 + xoffset)
+      	.attr("y1", height*0.925)
+        .attr("y2", height*0.925)
+        .attr("stroke-width", height*0.0075)
+        .attr("stroke", "black");
+        
+      svg.append("line")
+      	.attr("x1", width*0.85 + xoffset)
+        .attr("x2", width*0.865 + xoffset)
+      	.attr("y1", height*0.575)
+        .attr("y2", height*0.575)
+        .attr("stroke-width", height*0.0075)
+        .attr("stroke", "black");
+      svg.append("line")
+      	.attr("x1", width*0.865 + xoffset)
+        .attr("x2", width*0.865 + xoffset)
+      	.attr("y1", height*0.925)
+        .attr("y2", height*0.575)
+        .attr("stroke-width", height*0.0075)
+        .attr("stroke", "black");
+      svg.append("line")
+      	.attr("x1", width*0.865 + xoffset)
+        .attr("x2", width*0.85 + xoffset)
+      	.attr("y1", height*0.925)
+        .attr("y2", height*0.925)
+        .attr("stroke-width", height*0.0075)
+        .attr("stroke", "black");
+        
+      svg.append("text")
+      	.attr("transform", "translate(" + (width*0.72 + xoffset).toString() + "," + (height * 0.675).toString() + ")")
+        .style("text-anchor", "center")
+        .text(d3.format(".2f")(cov[0][0]))
+        .attr("id","cov11")
+        .style("font-size", (12 * width / 600).toString() + "px")
+        
+      svg.append("text")
+      	.attr("transform", "translate(" + (width*0.8 + xoffset).toString() + "," + (height * 0.675).toString() + ")")
+        .style("text-anchor", "center")
+        .text(d3.format(".2f")(cov[0][1]))
+        .attr("id","cov12")
+        .style("font-size", (12 * width / 600).toString() + "px")
+        
+      svg.append("text")
+      	.attr("transform", "translate(" + (width*0.72 + xoffset).toString() + "," + (height * 0.875).toString() + ")")
+        .style("text-anchor", "center")
+        .text(d3.format(".2f")(cov[1][0]))
+        .attr("id","cov21")
+        .style("font-size", (12 * width / 600).toString() + "px")
+        
+      svg.append("text")
+      	.attr("transform", "translate(" + (width*0.8 + xoffset).toString() + "," + (height * 0.875).toString() + ")")
+        .style("text-anchor", "center")
+        .text(d3.format(".2f")(cov[1][1]))
+        .attr("id","cov22")
+        .style("font-size", (12 * width / 600).toString() + "px")
+
+      // Draw the new contours
+      update()
+        
+        
+      const arcradius = xScale_left(1.5) - xScale_left(0)
+      
+      svg.append("path")
+          .attr("transform", "translate("+(xScale_left(mu[0])).toString()+","+(yScale_left(mu[1])).toString()+")")
+          .attr("d", d3.arc()({
+            innerRadius: arcradius,
+            outerRadius: arcradius,
+            startAngle: -Math.PI*0.75,
+            endAngle: -Math.PI*1.25
+          }))
+          .style("stroke-width",height*0.0075)
+        	.attr("stroke", "#3f9b0b")
+          .lower()
+          .attr("id","line_correlation");
+          
+      function signedCircularDistance(angle1, angle2) {
+
+          // Compute the angular difference between the angles
+          let diff = angle2 - angle1;
+
+          // Normalize the difference to be within -π to π range
+          diff = (diff + Math.PI) % (2 * Math.PI) - Math.PI;
+
+          // Determine the sign based on the direction
+          if (diff > Math.PI) {
+              diff -= 2 * Math.PI;
+          } else if (diff <= -Math.PI) {
+              diff += 2 * Math.PI;
+          }
+
+          // Convert the result to degrees
+          diff = diff * 180 / Math.PI; // Convert radians to degrees
+
+          return diff;
+      }
+
+
+      // ======================================================
+      // Define functions
+      // ======================================================
+
+ 
+        
+        
+        function scatter_samples() {
+        
+        	// Transform the samples
+          var samples_transformed = transform_standard_Gaussian_samples(samples,correlation)
+        
+          for (i = 0; i < 250; i++) {
+          
+            d3.select("#scatter"+i.toString())
+              .attr("cx",xScale_right(samples_transformed[i][0] + mu[0]))
+              .attr("cy",yScale_right(samples_transformed[i][1] + mu[1]))
+
+						// Hide samples outside the figure
+          	if ((samples_transformed[i][0] + mu[0] < -3) || (samples_transformed[i][0] + mu[0] > 3) || (samples_transformed[i][1] + mu[1] < -3) || (samples_transformed[i][1] + mu[1] > 3)) {
+           		d3.select("#scatter"+i.toString())
+              	.style("opacity",0)        
+            } else {
+           		d3.select("#scatter"+i.toString())
+              	.style("opacity",1)
+            }
+
+
+          }
+        
+        }
+
+
+        function draw_contours(mu, cov) {
+        	
+          // Delete all previous contour lines
+          svg.selectAll(".contour_lines").remove();
+          
+          // Do a principal component analysis of the covariance matrix
+          vectors = PCA.computeSVD(cov);
+          
+          // Get quantiles
+          sds = [2.29742059, 1.75524714, 1.43500483, 1.17741105, 0.94003483,
+            0.69449473, 0.38498817
+          ];
+          
+          colors = ['#999', '#757575', '#666', '#454545', '#333', '#151515', '#111'];
+          //['#4146ac', '#3aa3fc', '#25eca7', '#a4fc3c', '#f4c73a', '#f36315', '#b21a01'];
+          for (j = 0; j < 7; j++) {
+            sd = sds[j] * math.sqrt(vectors[0]["eigenvalue"]);
+            svg.append("ellipse") // attach an ellipse
+              .attr("cx", 0)
+              .attr("cy", 0)
+              .attr("rx", 0.7 * height / 6 * sd)
+              .attr("ry", 0.7 * height / 6 * math.sqrt(vectors[1]["eigenvalue"]) / math.sqrt(vectors[0]["eigenvalue"]) * sd)
+              .attr("transform", "translate(" + (xScale_left(mu[0])).toString() + "," + (yScale_left(mu[1])).toString() + ") rotate(" + (-math.atan2(vectors[0]["vector"][1], vectors[0]["vector"][0]) / math.pi * 180).toString() + ")")
+              .attr("fill", "None")
+              .attr("stroke", colors[j])
+              .attr("stroke-linejoin", "round")
+              .attr('stroke-width', 1 * width / 500)
+              .attr("class", "contour_lines")
+              .attr("id", "ellipse"+(j).toString())
+              .lower();
+              
+          }
+        }
+
+
+
+				var local_correlation,local_sigma_x,local_sigma_y
+
+        function update() {
+        
+          // Update covariance
+          correlation = math.min([0.9999999,math.max([-0.9999999,correlation])])
+          sigma_x = math.max([0.01,sigma_x])
+          sigma_y = math.max([0.01,sigma_y])
+          
+          // Update covariance
+          cov = [
+            [sigma_x*sigma_x, sigma_x*sigma_y*correlation],
+            [sigma_y*sigma_x*correlation, sigma_y*sigma_y]
+          ];
+          
+
+          // Update the plots
+          draw_contours(mu, cov)
+          scatter_samples()
+          
+
+          
+          // Update the covariance legend
+          d3.select("#cov11")
+            .text(d3.format(".2f")(cov[0][0]))
+          d3.select("#cov12")
+            .text(d3.format(".2f")(cov[0][1]))
+          d3.select("#cov21")
+            .text(d3.format(".2f")(cov[1][0]))
+          d3.select("#cov22")
+            .text(d3.format(".2f")(cov[1][1]))
+            
+        }
+        
+        
+        
+        
+        // Standard Normal variate using Box-Muller transform.
+        function gaussianRandom(mean=0, stdev=1) {
+            const u = 1 - Math.random(); // Converting [0,1) to (0,1]
+            const v = Math.random();
+            const z = Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v );
+            // Transform to the desired mean and standard deviation:
+            return z * stdev + mean;
+        }
+        
+        
+        function transform_standard_Gaussian_samples(samples) {
+        
+        	var cholesky = [[sigma_x,0],[sigma_y*correlation,sigma_y*math.sqrt(1-math.pow(correlation,2))]];
+        
+        	return math.transpose(math.multiply(cholesky,math.transpose(samples)))
+        	
+        }
+        
+        
+        
+        
+
+    </script>
+  </body>
+</html>
