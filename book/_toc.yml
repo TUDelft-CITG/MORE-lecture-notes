@@ -19,6 +19,11 @@ parts:
            title: Correlations in NPBNs
          - file: NPBN/NPBN_tutorial.ipynb
            title: Tutorial py-Banshee
+      - file: data_assimilation/DA_overview.md
+        title: Data Assimilation
+        sections:
+         - file: data_assimilation/Da_basics.md
+           title: Basics
     # - file: references.md
     # - file: changelog.md
     # - file: credits.md
