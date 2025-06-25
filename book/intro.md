@@ -1,6 +1,14 @@
 (intro)=
-# Welcome to the Template Book
+# Welcome to the MORE BOOK!
 
-_This is the first page the student will see when opening the url._
+This is where reading material is located, along with exercises and interactive elements to practice and study the module material.
 
-This book can be used as a template for other books. It includes a starter package of the software developed by the TeachBooks initiative and some exercises to get you going!
+## Spot a mistake? 
+
+Please, let us know in p.maresnasarre@tudelft.nl
+
+## Have questions about the module?
+
+Please, reach out the Module Manager, Elisa Ragno.
+
+## We hope you enjoy the journey in MORE!
