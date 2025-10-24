@@ -10,6 +10,11 @@ parts:
           - file: fundamentals/Correlation_and_Covariance.md
           # - file: fundamentals/Copulas.ipynb
           - file: fundamentals/Bivariate.md
+      - file: bayes_mcmc/introduction.md
+        title: Monte Carlo methods and MCM
+        sections:
+          - file: bayes_mcmc/sampling.ipynb
+            title: Sampling probability distributions
       - file: NPBN/overview.md
         title: Non-parametric Bayesian Networks
         sections:
