@@ -26,6 +26,6 @@ parts:
            title: Correlations in NPBNs
          - file: NPBN/NPBN_tutorial.ipynb
            title: Tutorial py-Banshee
-    # - file: references.md
+      - file: references.md
     # - file: changelog.md
     # - file: credits.md
