@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.stats as stats
 
 
 def compute_acceptance_probability(
@@ -37,10 +38,13 @@ def sample_metropolis_hastings(
         rng = np.random.default_rng()
 
     samples = []
+    proposals = []
+    accepted = []
     current_sample = start_value
 
     for _ in range(num_samples):
         proposed_sample = draw_proposal_sample(current_sample, proposal_cov, rng=rng)
+        proposals.append(proposed_sample)
 
         # Acceptance probability
         acceptance_probability = compute_acceptance_probability(
@@ -52,9 +56,33 @@ def sample_metropolis_hastings(
         )
 
         # Accept or reject the proposal
-        if rng.random() < acceptance_probability:
+        accept = rng.random() < acceptance_probability
+        accepted.append(accept)
+        if accept:
             current_sample = proposed_sample  # Accept the proposal
 
         samples.append(current_sample)
 
-    return np.array(samples)
+    return np.array(samples), np.array(proposals), np.array(accepted)
+
+
+def rejection_sampling(
+    N, evaluate_target_pdf, evaluate_proposal_pdf, get_proposal_samples
+):
+    # Generate samples from the proposal distribution
+    proposal_samples = get_proposal_samples(N)
+
+    # Compute the target and proposal pdf for each sample
+    target_pdf = evaluate_target_pdf(proposal_samples)
+    proposal_pdf = evaluate_proposal_pdf(proposal_samples)
+
+    # Compute the ratio of the pdfs
+    ratio = target_pdf / proposal_pdf
+
+    # Determine the scaling constant
+    M = ratio.max()
+
+    # Accept or reject samples based on the ratio of the pdfs
+    u = stats.uniform.rvs(size=N)
+    accept = u < ratio / M
+    return proposal_samples, proposal_pdf, u, accept, M
