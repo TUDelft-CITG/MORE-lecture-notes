@@ -30,12 +30,17 @@ def sample_metropolis_hastings(
     draw_proposal_sample,
     num_samples,
     proposal_cov=1.0,
+    rng=None,
 ):
+    # use independent random state if none provided
+    if rng is None:
+        rng = np.random.default_rng()
+
     samples = []
     current_sample = start_value
 
     for _ in range(num_samples):
-        proposed_sample = draw_proposal_sample(current_sample, proposal_cov)
+        proposed_sample = draw_proposal_sample(current_sample, proposal_cov, rng=rng)
 
         # Acceptance probability
         acceptance_probability = compute_acceptance_probability(
@@ -47,7 +52,7 @@ def sample_metropolis_hastings(
         )
 
         # Accept or reject the proposal
-        if np.random.rand() < acceptance_probability:
+        if rng.random() < acceptance_probability:
             current_sample = proposed_sample  # Accept the proposal
 
         samples.append(current_sample)
