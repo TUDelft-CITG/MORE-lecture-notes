@@ -9,6 +9,27 @@ def compute_acceptance_probability(
     compute_target_logpdf,
     compute_proposal_logpdf,
 ):
+    """
+    Compute the Metropolis-Hastings acceptance probability for a single proposal.
+
+    Parameters
+    ----------
+    current_sample
+        Current state (1D array).
+    proposed_sample
+        Proposed state (1D array).
+    proposal_cov
+        Parameter passed to the proposal log-pdf (e.g. covariance matrix or scalar).
+    compute_target_logpdf
+        Callable that returns the log of the target density at a given point.
+    compute_proposal_logpdf
+        Callable that returns the log of the proposal density q(y | x).
+
+    Returns
+    -------
+    float
+        Acceptance probability in [0, 1].
+    """
     # Calculate acceptance ratio
     log_target_ratio = compute_target_logpdf(proposed_sample) - compute_target_logpdf(
         current_sample
@@ -33,6 +54,33 @@ def sample_metropolis_hastings(
     proposal_cov=1.0,
     rng=None,
 ):
+    """
+    Run a Metropolis-Hastings random-walk sampler.
+
+    Parameters
+    ----------
+    start_value
+        Initial state (array-like).
+    compute_target_logpdf
+        Function returning log(target_pdf(x)).
+    compute_proposal_logpdf
+        Function returning log(q(y | x)).
+    draw_proposal_sample
+        Function that draws a proposal y ~ q(· | x). Signature: (x, proposal_cov, rng) -> y
+    num_samples
+        Number of iterations / samples to produce.
+    proposal_cov
+        Parameter (e.g. covariance) passed to draw_proposal_sample and compute_proposal_logpdf.
+    rng
+        Optional numpy random Generator.
+
+    Returns
+    -------
+    samples, proposals, accepted
+        samples: array of length num_samples with the chain states (after accept/reject).
+        proposals: array of proposed states (length num_samples).
+        accepted: boolean array indicating whether each proposal was accepted.
+    """
     # use independent random state if none provided
     if rng is None:
         rng = np.random.default_rng()
@@ -69,6 +117,31 @@ def sample_metropolis_hastings(
 def rejection_sampling(
     N, evaluate_target_pdf, evaluate_proposal_pdf, get_proposal_samples
 ):
+    """
+    Basic rejection sampling.
+
+    Parameters
+    ----------
+    N
+        Number of proposal samples to draw.
+    evaluate_target_pdf
+        Function returning p(x) for x (accepts vectorized input).
+    evaluate_proposal_pdf
+        Function returning q(x) for x (accepts vectorized input).
+    get_proposal_samples
+        Function that draws N proposal samples. Signature: (N, rng) -> array of shape (N, dim)
+    rng
+        Optional numpy random Generator.
+
+    Returns
+    -------
+    proposal_samples, proposal_pdf, u, accept, M
+        proposal_samples: array of proposals.
+        proposal_pdf: proposal density evaluated at proposals.
+        u: uniform draws used for acceptance decision.
+        accept: boolean mask of accepted proposals.
+        M: scaling constant used (max ratio).
+    """
     # Generate samples from the proposal distribution
     proposal_samples = get_proposal_samples(N)
 
