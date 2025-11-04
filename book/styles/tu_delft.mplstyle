@@ -1,0 +1,9 @@
+# Custom TU Delft style
+
+# Remove background color in plots
+figure.facecolor: none
+axes.facecolor: none
+savefig.facecolor: none
+
+# Color cycle – Use TU Delft secondary colors
+axes.prop_cycle: cycler('color', ['0076C2', 'EC6842', '00B8C8', 'FFB81C', '0C2340', '009B77', '6F1D77', 'A50034', 'E03C31'])
