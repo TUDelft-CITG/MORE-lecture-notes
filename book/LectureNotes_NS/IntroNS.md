@@ -19,4 +19,12 @@ Here, we will explore two different approaches for addressing nonstationarity in
 
 In the first approach, we separate the deterministic and stochastic components and develop a statistical model only for the stochastic component. In the second approach, the deterministic component is incorporated directly into the statistical model. We will apply the latter approach to extreme value analysis and review examples from the scientific literature.
 
+<div style="background-color:#2b2b2b; border-left: 4px solid #888; padding: 12px; border-radius: 8px; color:#ddd;">
+  <strong>Why.</strong> Real-world processes such as rainfall, temperature, or traffic flow often exhibit trends, cycles, or external influences that violate the assumptions of independence and stationarity.  
+
+<strong>What.</strong> A process is nonstationary when its statistical properties, such as mean or variance, change systematically over time or with an explanatory variable.  
+
+<strong>How.</strong> Nonstationary analysis addresses this behavior by allowing model parameters to vary with time or with physical covariates through explicit deterministic functions.
+</div>
+
 ## Data Exploration
