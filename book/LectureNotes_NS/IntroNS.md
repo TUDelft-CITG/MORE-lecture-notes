@@ -17,7 +17,7 @@ Hence, the concept of **nonstationary analysis**: modeling data whose statistica
 
 Here, we will explore two different approaches for addressing nonstationarity in the data. In both cases, we assume that the trend observed in the data can be modelled via a deterministic function. e.g., a linear trend over time or as a function of a physical covariate, for which an explicit mathematical formulation is available.
 
-In the first approach, we separate the deterministic and stochastic components and develop a statistical model only for the stochastic component. In the second approach, the deterministic component is incorporated directly into the statistical model. We will apply the latter approach to extreme value analysis and review examples from the scientific literature.
+In the first approach, i.e., *detrending approach*, we separate the deterministic and stochastic components and develop a statistical model only for the stochastic component. In the second approach, i.e., *integrated approach*, the deterministic component is incorporated directly into the statistical model. We will apply the latter approach to extreme value analysis and review examples from the scientific literature.
 
 <div style="background-color:#2b2b2b; border-left: 4px solid #888; padding: 12px; border-radius: 8px; color:#ddd;">
   <strong>Why.</strong> Real-world processes such as rainfall, temperature, or traffic flow often exhibit trends, cycles, or external influences that violate the assumptions of independence and stationarity.  
