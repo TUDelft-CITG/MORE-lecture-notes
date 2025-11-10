@@ -26,6 +26,11 @@ parts:
            title: Correlations in NPBNs
          - file: NPBN/NPBN_tutorial.ipynb
            title: Tutorial py-Banshee
+      - file: data_assimilation/01_introduction.md
+        title: Data Assimilation
+        sections:
+         - file: data_assimilation/02_Bayesian_Filters.md
+           title: Bayesian Filters
       - file: references.md
     # - file: changelog.md
     # - file: credits.md
