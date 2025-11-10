@@ -139,8 +139,18 @@ All filters fundamentally consist of two steps. We assume that we start with a s
     - Integrate out the past state
 
         $\underbrace{p(\boldsymbol{x}_{t+1}|\boldsymbol{y}_{1:t}^{*})}_{\text{filtering forecast}} = \int p(\boldsymbol{x}_{t+1},\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t}^{*}) d \boldsymbol{x}_{t}$
-        
+
     - Increment the time step $t := t+1$ and go back to Step 1
+
+#### The Kalman filter
+
+In the Kalman filter, we implement these operations for Gaussian PDFs. For this to work, we need the following assumptions:
+
+1) The prior is Gaussian
+2) The forecast model is linear and Gaussian
+3) The observation model is linear and Gaussian
+
+Together, these assumptions guarantee that all distributions involved are always Gaussian, which allows us to run the Kalman filter infinitely.
 
 The interactive figure below shows how conditioning a multivariate Gaussian PDF on different values affects its mean and covariance:
 
