@@ -33,7 +33,7 @@ Marginalizing out $x_{2}$ then reduces to simply deleting the corresponding entr
 
 $$
 \begin{aligned}
-&\int \mathcal{N}\left(\boldsymbol{x} = \left[ \begin{matrix}
+p(x_1,x_3) &= \int \mathcal{N}\left(\boldsymbol{x} = \left[ \begin{matrix}
 x_{1} \\
 x_{2} \\
 x_{3} \\
@@ -71,5 +71,32 @@ x_{3} \\
 \sigma_{1}^2 && \Sigma_{1,3} \\
 \Sigma_{3,1} && \sigma_{3}^2 \\
 \end{matrix} \right]\right)
+\end{aligned}
+$$
+
+#### Conditioning
+
+Likewise, conditioning can be implemented with a manipulation of the mean and covariance matrix. In this case, it reduces to two short equations using linear algebra. Let $p(\boldsymbol{x},\boldsybmol{y})$ be defined as a Gaussian joint distribution:
+
+$$
+\mathcal{N}\left(\left[ \begin{matrix}
+\boldsymbol{y} \\
+\boldsymbol{x} \\
+\end{matrix} \right], \boldsymbol{\mu} =  \left[ \begin{matrix}
+\boldsymbol{mu}_{\boldsymbol{y}} \\
+\boldsymbol{mu}_{\boldsymbol{x}}\\
+\end{matrix} \right], 
+\boldsymbol{\Sigma} = \left[ \begin{matrix}
+\boldsymbol{\Sigma}_{\boldsymbol{y},\boldsymbol{y}} && \boldsymbol{\Sigma}_{\boldsymbol{y},\boldsymbol{x}} \\
+\boldsymbol{\Sigma}_{\boldsymbol{x},\boldsymbol{y}} && \boldsymbol{\Sigma}_{\boldsymbol{x},\boldsymbol{x}} \\
+\end{matrix} \right]\right).
+$$
+
+Then, the mean and covariance of a conditional Gaussian distribution $p(\boldsymbol{x}|\boldsybmol{y}^{*})$ can be obtained as:
+
+$$
+\begin{aligned}
+\boldsymbol{\mu}_{\boldsymbol{x}}^* &= \boldsymbol{\mu}_{\boldsymbol{x}} - \boldsymbol{\Sigma}_{\boldsymbol{x},\boldsymbol{y}}\boldsymbol{\Sigma}_{\boldsymbol{y},\boldsymbol{y}}^{-1}(\boldsymbol{\mu}_{\boldsymbol{y}} - \boldsymbol{y}^*) \\
+\boldsymbol{\Sigma}_{\boldsymbol{x}}^* &= \boldsymbol{\Sigma}_{\boldsymbol{x}} - \boldsymbol{\Sigma}_{\boldsymbol{x},\boldsymbol{y}}\boldsymbol{\Sigma}_{\boldsymbol{y},\boldsymbol{y}}^{-1}\boldsymbol{\Sigma}_{\boldsymbol{y},\boldsymbol{x}}
 \end{aligned}
 $$
