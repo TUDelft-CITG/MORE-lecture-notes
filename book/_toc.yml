@@ -34,6 +34,8 @@ parts:
            sections:
             - file: data_assimilation/02a_Gaussian_special_case.md
             - file: data_assimilation/02b_Kalman_Filter.md
+            - file: data_assimilation/02c_Kalman_Filter_example.md
+              title: Example
       - file: references.md
     # - file: changelog.md
     # - file: credits.md
