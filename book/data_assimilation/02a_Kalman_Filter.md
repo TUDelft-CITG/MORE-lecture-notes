@@ -2,8 +2,8 @@
 
 ### The Gaussian special case
 
-Fortunately, there exist a few special cases for which closed-form solutions exist. Perhaps the most important one of these special cases is the **Gaussian distribution**. As you may remember from previous courses, Gaussian PDFs $\mathcal{N}(\boldsymbol{mu},\boldsymbol{\Sigma})$ are defined by two coefficients:
-- a **mean** $\boldsymbol{mu}$ that defines the center of a Gaussian distribution, and 
+Fortunately, there exist a few special cases for which closed-form solutions exist. Perhaps the most important one of these special cases is the **Gaussian distribution**. As you may remember from previous courses, Gaussian PDFs $\mathcal{N}(\boldsymbol{\mu},\boldsymbol{\Sigma})$ are defined by two coefficients:
+- a **mean** $\boldsymbol{\mu}$ that defines the center of a Gaussian distribution, and 
 - a **covariance matrix** $\boldsymbol{\Sigma}$ that defines the spread and correlation of the marginal dimensions.
 
 What makes the Gaussian case special is that the marginalization and conditioning of a Gaussian PDF always return another Gaussian PDF. In fact, both operations reduce to simple manipulations of the mean and the covariance:
@@ -122,16 +122,24 @@ All filters fundamentally consist of two steps. We assume that we start with a s
 
 1) **Assimilation step**
     - Augment the current state prior with the observation predictions
-        $p(\boldsymbol{x}_{t},\boldsymbol{y}_{t}|\boldsymbol{y}_{1:t-1}^{*}) = \underbrace{p(\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t-1}^{*})}_{\text{filtering forecast}} \underbrace{p(\boldsymbol{y}_{t}|\boldsymbol{x}_{t})}_{\text{observation model}}$
+
+        $p(\boldsymbol{x}_{t},\boldsymbol{y}_{t}|\boldsymbol{y}_{1:t-1}^{*}) = \underbrace{p(\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t-1}^{*})}_{\text{filtering forecast}} \overbrace{p(\boldsymbol{y}_{t}|\boldsymbol{x}_{t})}^{\text{observation model}}$
+
     - Condition on the new observation
-        $\underbrace{p(\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t}^{*})}_{\text{filtering posterior}} = p(\boldsymbol{x}_{t},\boldsymbol{y}_{t}|\boldsymbol{y}_{1:t-1}^{*}) / \underbrace{p(\boldsymbol{y}_{t}^{*}|\boldsymbol{y}_{1:t-1}^{*})}_{\text{observation model}}$
+
+        $\underbrace{p(\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t}^{*})}_{\text{filtering posterior}} = p(\boldsymbol{x}_{t},\boldsymbol{y}_{t}|\boldsymbol{y}_{1:t-1}^{*}) / p(\boldsymbol{y}_{t}^{*}|\boldsymbol{y}_{1:t-1}^{*})$
+
     - Go to Step 2
 
 2) **Forecast step**
     - Predict the next state
-        $p(\boldsymbol{x}_{t+1},\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t}^{*}) = \underbrace{p(\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t}^{*})}_{\text{filtering posterior}} \underbrace{p(\boldsymbol{x}_{t+1}|\boldsymbol{x}_{t})}_{\text{forecast model}}$
+
+        $p(\boldsymbol{x}_{t+1},\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t}^{*}) = \underbrace{p(\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t}^{*})}_{\text{filtering posterior}} \verbrace{p(\boldsymbol{x}_{t+1}|\boldsymbol{x}_{t})}^{\text{forecast model}}$
+
     - Integrate out the past state
+
         $\underbrace{p(\boldsymbol{x}_{t+1}|\boldsymbol{y}_{1:t}^{*})}_{\text{filtering forecast}} = \int p(\boldsymbol{x}_{t+1},\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t}^{*}) d \boldsymbol{x}_{t}$
+        
     - Increment the time step $t := t+1$ and go back to Step 1
 
 The interactive figure below shows how conditioning a multivariate Gaussian PDF on different values affects its mean and covariance:
