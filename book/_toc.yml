@@ -32,7 +32,8 @@ parts:
          - file: data_assimilation/02_Analytical_Filters.md
            title: Analytical Filters
            sections:
-            - file: data_assimilation/02a_Kalman_Filter.md
+            - file: data_assimilation/02a_Gaussian_special_case.md
+            - file: data_assimilation/02b_Kalman_Filter.md
       - file: references.md
     # - file: changelog.md
     # - file: credits.md
