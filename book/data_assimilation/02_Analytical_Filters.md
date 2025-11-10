@@ -31,7 +31,7 @@ There are two separate things happening here:
 1) We combine the **prior** $p(\boldsymbol{x})$ and the observation model $p(\boldsymbol{y}|\boldsymbol{x})$ into a joint probability distribution $p(\boldsymbol{x},\boldsymbol{y})$ between the states $\boldsymbol{x}$ and observation predictions $\boldsymbol{y}$. Mind that the observation model yields a **likelihood** $p(\boldsymbol{y}^{*}|\boldsymbol{x})$ once we plug in a specific observation value $\boldsymbol{y}^{*}$.
 2) We then condition this joint distribution $p(\boldsymbol{x},\boldsymbol{y})$ on a specific observation value $\boldsymbol{y}^{*}$ to obtain the **posterior** distribution $p(\boldsymbol{x}|\boldsymbol{y}^{*})$.
 
-### A practical example: profiling a bank robber
+### A discrete example: profiling a bank robber
 
 Assume that you are tasked with assembling a physical description of a bank robber. Since the bank robber was wearing a mask, we have conflicting information about his **hair color** $x$ - the witnesses cannot agree what his hair color was. Most of them think his hair color was brown (49%), some of them claimed it was blond (22%), and a few thought it was black (18%) or red (11%). This allows us to define a prior distribution $p(x)$.
 
@@ -51,3 +51,13 @@ After doing this, we obtain a **posterior estimate** of the bank robbers hair co
 How to create a contingency table for hair color and eye color, and use it to obtain posterior probabilities.
 ```
 <br>
+
+### The continuous case
+
+Most random variables we deal with are of course not discrete but **continuous**, which means that a contingency table would require infinitely many rows and columns. Instead, we this work with operations on **probability density functions** (pdfs):
+- summing across rows or columns becomes **marginalization**, which is achieved by integrating out a variable: 
+    $$p(\boldsymbol{y})=\int p(\boldsymbol{y},\boldsymbol{y}) d\boldsymbol{x}$$
+- **conditionalization** is achieved by freezing one input variable (say: $\boldsymbol{y} := \boldsymbol{y}^{*}$) and then normalizing against its marginal probability density $p(\boldsymbol{y}^{*})$:
+    $$p(\boldsymbol{x}|\boldsymbol{y}^{*})=\frac{p(\boldsymbol{y}^{*},\boldsymbol{x})}{p(\boldsymbol{y}^{*})}$$
+
+While these operations are conceptually simple, their practical implementation is very difficult. In the continuous case, each of these operations requires the manipulation of *functions* rather than numbers. Since these PDFs have to describe the precise probability (density) of arbitrary combinations of states, parameters, and observations, the distributions they describe can be extremely complex. In practice, it is thus rarely possible to write down closed-form expressions for PDFs, which in turn makes it mpossible to manipulate them. Since we require both joint distributions, marginalization, and conditioning for Bayesian inference, this makes analytic solutions to Bayesian inference difficult.

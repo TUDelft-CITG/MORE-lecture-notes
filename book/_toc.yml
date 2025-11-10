@@ -29,8 +29,10 @@ parts:
       - file: data_assimilation/01_introduction.md
         title: Data Assimilation
         sections:
-         - file: data_assimilation/02_Bayesian_Filters.md
-           title: Bayesian Filters
+         - file: data_assimilation/02_Analytical_Filters.md
+           title: Analytical Filters
+          sections:
+          - file: numericadata_assimilationl_methods/02a_Kalman_Filter.md
       - file: references.md
     # - file: changelog.md
     # - file: credits.md
