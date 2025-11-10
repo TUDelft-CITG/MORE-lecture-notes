@@ -28,5 +28,26 @@ $$
 $$
 
 There are two separate things happening here:
-1) We combine the **prior** $p(\boldsymbol{x})$ and the observation model $p(\boldsymbol{y}|\boldsymbol{x})$ into a joint probability distribution of $p(\boldsymbol{x},\boldsymbol{y})$ between the states $\boldsymbol{x}$ and observation predictions $\boldsymbol{y}$. Mind that the observation model yields a **likelihood** $p(\boldsymbol{y}^{*}|\boldsymbol{x})$ once we plug in a specific observation value $\boldsymbol{y}^{*}$.
+1) We combine the **prior** $p(\boldsymbol{x})$ and the observation model $p(\boldsymbol{y}|\boldsymbol{x})$ into a joint probability distribution $p(\boldsymbol{x},\boldsymbol{y})$ between the states $\boldsymbol{x}$ and observation predictions $\boldsymbol{y}$. Mind that the observation model yields a **likelihood** $p(\boldsymbol{y}^{*}|\boldsymbol{x})$ once we plug in a specific observation value $\boldsymbol{y}^{*}$.
 2) We then condition this joint distribution $p(\boldsymbol{x},\boldsymbol{y})$ on a specific observation value $\boldsymbol{y}^{*}$ to obtain the **posterior** distribution $p(\boldsymbol{x}|\boldsymbol{y}^{*})$.
+
+### A practical example: profiling a bank robber
+
+Assume that you are tasked with assembling a physical description of a bank robber. Since the bank robber was wearing a mask, we have conflicting information about his **hair color** $x$ - the witnesses cannot agree what his hair color was. Most of them think his hair color was brown (49%), some of them claimed it was blond (22%), and a few thought it was black (18%) or red (11%). This allows us to define a prior distribution $p(x)$.
+
+Fortunately, we caught a lucky break: the cashier was actually close enough to the bank robber to see his eye color $y$, and she noticed that his eyes were $y^{*}=\text{green}$. Does this help us to improve our knowledge about his hair color? Yes!
+
+As it turns out, there is a genetic link between hair color and eye color. If we know the prevalence of eye colors among people with different hair colors, we obtain the equivalent to an observation model $p(y|x)$. Multiplying these likelihoods with the hair color probability obtained from our witnesses - the equivalent to a prior $p(x)$ (Step 1) - we can form a **contingency table** that represents the probability of every conceivable combination of hair color and eye color, or a discrete joint probability distribution $p(x,y)$ (Step 2). Conditioning on the actual eye color we have observed ($y^{*}=\text{green}$) then amounts to reading out the correct row of this contingency matrix, and normalizing it across the sum of probabilities in this row (the model evidence $p(y^{*})$; Step 3).
+
+After doing this, we obtain a **posterior estimate** of the bank robbers hair color: we remain confident that his hair color may have been brown (48% to 46%), have increased our belief that his hair color may have been blond (22% to 27%) or red (11% to 18%), and have halved our belief that his hair color may have been black (18% to 9%).
+
+<br><br>
+
+```{figure} ../figures/Bayesian_inference_hair_color_eye_color.png
+
+---
+
+---
+How to create a contingency table for hair color and eye color, and use it to obtain posterior probabilities.
+```
+<br>
