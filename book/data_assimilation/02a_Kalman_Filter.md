@@ -76,15 +76,15 @@ $$
 
 #### Conditioning
 
-Likewise, conditioning can be implemented with a manipulation of the mean and covariance matrix. In this case, it reduces to two short equations using linear algebra. Let $p(\boldsymbol{x},\boldsybmol{y})$ be defined as a Gaussian joint distribution:
+Likewise, conditioning can be implemented with a manipulation of the mean and covariance matrix. In this case, it reduces to two short equations using linear algebra. Let $p(\boldsymbol{x},\boldsymbol{y})$ be defined as a Gaussian joint distribution:
 
 $$
 \mathcal{N}\left(\left[ \begin{matrix}
 \boldsymbol{y} \\
 \boldsymbol{x} \\
 \end{matrix} \right], \boldsymbol{\mu} =  \left[ \begin{matrix}
-\boldsymbol{mu}_{\boldsymbol{y}} \\
-\boldsymbol{mu}_{\boldsymbol{x}}\\
+\boldsymbol{\mu}_{\boldsymbol{y}} \\
+\boldsymbol{\mu}_{\boldsymbol{x}}\\
 \end{matrix} \right], 
 \boldsymbol{\Sigma} = \left[ \begin{matrix}
 \boldsymbol{\Sigma}_{\boldsymbol{y},\boldsymbol{y}} && \boldsymbol{\Sigma}_{\boldsymbol{y},\boldsymbol{x}} \\
@@ -92,7 +92,7 @@ $$
 \end{matrix} \right]\right).
 $$
 
-Then, the mean and covariance of a conditional Gaussian distribution $p(\boldsymbol{x}|\boldsybmol{y}^{*})$ can be obtained as:
+Then, the mean and covariance of a conditional Gaussian distribution $p(\boldsymbol{x}|\boldsymbol{y}^{*})$ can be obtained as:
 
 $$
 \begin{aligned}
