@@ -164,8 +164,8 @@ Inserting the identities above, we obtain the following Equations:
 
 $$
 \begin{aligned}
-\boldsymbol{\mu}_{\boldsymbol{x}}^* &= \boldsymbol{\mu}_{\boldsymbol{x}} - \overbrace{\boldsymbol{\Sigma}_{\boldsymbol{x},\boldsymbol{x}}\boldsymbol{H}^\intercal\left(\boldsymbol{H}\boldsymbol{\Sigma}_{\boldsymbol{x},\boldsymbol{x}}\boldsymbol{H}^\intercal + \boldsymbol{R}\right)^{-1}}^{\text{Kalman Gain }\boldsymbol{K}}(\boldsymbol{\mu}_{\boldsymbol{y}} - \boldsymbol{y}^*) = \boldsymbol{\mu}_{\boldsymbol{x}} - \boldsymbol{K} (\boldsymbol{\mu}_{\boldsymbol{y}} - \boldsymbol{y}^*) \\
-\boldsymbol{\Sigma}_{\boldsymbol{x}}^* &= \boldsymbol{\Sigma}_{\boldsymbol{x}} - \underbrace{\boldsymbol{\Sigma}_{\boldsymbol{x},\boldsymbol{x}}\boldsymbol{H}^\intercal\left(\boldsymbol{H}\boldsymbol{\Sigma}_{\boldsymbol{x},\boldsymbol{x}}\boldsymbol{H}^\intercal + \boldsymbol{R}\right)^{-1}}_{\text{Kalman Gain }\boldsymbol{K}}\boldsymbol{\Sigma}_{\boldsymbol{y},\boldsymbol{x}} = \boldsymbol{\Sigma}_{\boldsymbol{x}} - \boldsymbol{K}\boldsymbol{\Sigma}_{\boldsymbol{y},\boldsymbol{x}}
+\boldsymbol{\mu}_{\boldsymbol{x}}^* &= \boldsymbol{\mu}_{\boldsymbol{x}} - \overbrace{\boldsymbol{\Sigma}_{\boldsymbol{x},\boldsymbol{x}}\boldsymbol{H}^\intercal\left(\boldsymbol{H}\boldsymbol{\Sigma}_{\boldsymbol{x},\boldsymbol{x}}\boldsymbol{H}^\intercal + \boldsymbol{R}\right)^{-1}}^{\text{Kalman Gain }\boldsymbol{K}}(\boldsymbol{\mu}_{\boldsymbol{y}} - \boldsymbol{y}^*) &&= \boldsymbol{\mu}_{\boldsymbol{x}} - \boldsymbol{K} (\boldsymbol{\mu}_{\boldsymbol{y}} - \boldsymbol{y}^*) \\
+\boldsymbol{\Sigma}_{\boldsymbol{x}}^* &= \boldsymbol{\Sigma}_{\boldsymbol{x}} - \underbrace{\boldsymbol{\Sigma}_{\boldsymbol{x},\boldsymbol{x}}\boldsymbol{H}^\intercal\left(\boldsymbol{H}\boldsymbol{\Sigma}_{\boldsymbol{x},\boldsymbol{x}}\boldsymbol{H}^\intercal + \boldsymbol{R}\right)^{-1}}_{\text{Kalman Gain }\boldsymbol{K}}\boldsymbol{\Sigma}_{\boldsymbol{y},\boldsymbol{x}} &&= \boldsymbol{\Sigma}_{\boldsymbol{x}} - \boldsymbol{K}\boldsymbol{\Sigma}_{\boldsymbol{y},\boldsymbol{x}}
 \end{aligned}
 $$
 
@@ -173,9 +173,9 @@ where the expression $\boldsymbol{K} = \boldsymbol{\Sigma}_{\boldsymbol{x},\bold
 
 #### Kalman Gain, or finding statistical compromise
 
-The Kalman Gain is an interesting quantity. A closer look at its formulation reveals that it defines a compromise between the prior uncertainty $\boldsymbol{\Sigma}_{\boldsymbol{x},\boldsymbol{x}}$ and the observation error $\boldsymbol{R}\$. This allows us to distinguish two cases:
-- $\boldsymbol{\Sigma}_{\boldsymbol{x},\boldsymbol{x}} ≪ \boldsymbol{R}\$: if the prior uncertainty is much lower than the observation error, then the Kalman Gain will be close to zero, which will nullify any update to the mean and covariance.
-- $\boldsymbol{\Sigma}_{\boldsymbol{x},\boldsymbol{x}} ≫ \boldsymbol{R}\$: if the observation error is much lower than the prior uncertainty, then we trust the observations significantly more than our current prior estimate. This means we apply a strong update to the mean and covariance, moving the mean towards the observations and significantly reducing the magnitude of the covariance.
+The Kalman Gain is an interesting quantity. A closer look at its formulation reveals that it defines a compromise between the prior uncertainty $\boldsymbol{\Sigma}_{\boldsymbol{x},\boldsymbol{x}}$ and the observation error $\boldsymbol{R}$. This allows us to distinguish two cases:
+- $\boldsymbol{\Sigma}_{\boldsymbol{x},\boldsymbol{x}} \ll \boldsymbol{R}\$: if the prior uncertainty is much lower than the observation error, then the Kalman Gain will be close to zero, which will nullify any update to the mean and covariance.
+- $\boldsymbol{\Sigma}_{\boldsymbol{x},\boldsymbol{x}} \gg \boldsymbol{R}\$: if the observation error is much lower than the prior uncertainty, then we trust the observations significantly more than our current prior estimate. This means we apply a strong update to the mean and covariance, moving the mean towards the observations and significantly reducing the magnitude of the covariance.
 
 In consequence, one way of thinking about the Kalman Gain $\boldsymbol{K}$ is to view it as a compromise matrix that defines which side (*prior* or *observations*) -- if any -- the posterior distribution will favour. Of course, this is only one way of viewing the Kalman gain. The interactive figure below shows a geometric perspective on how conditioning a multivariate Gaussian PDF (with different prior uncertainty and observation error) on different values affects its mean and covariance:
 
