@@ -6,7 +6,7 @@ This sandbox illustrates how observation and forcast error affect the tracking p
 :name: Gaussian_inference
 :aspectratio: 2 / 1
 
-The Kalman filter's position update relies on three primary variables: the prior uncertainty (yellow), the observation error (blue), and the observation value (green). Adapt these values by dragging the sliders and observe how the compromise solution (the posterior; red) changes in response.
+Adjust the sliders for the observation error and forecast error, and see how the Kalman Filter's ability to track the true state changes in response. Which settings yield the highest log density?
 ````
 
 - Toggling the **assimilate** checkbox begins begins position measurements, which pulls the model's position estimate towards observations which may or may not be closer to the true position of the satellite. Assimilation steps reduce uncertainty, and will eventually zero in on a (potentially compromised) position estimate in absence of forecast error.
