@@ -64,13 +64,14 @@ $$
 This may leave us with a number of questions: What is an "observation operator"? In practice, $\boldsymbol{H}$ is often just a matrix of ones and zeroes that extracts the observed states from the state vector $\boldsymbol{x}$:
 
 $$
+\begin{aligned}
 \boldsymbol{y}_{t} = \left[
 \begin{matrix}
 y_{t,1} \\
 y_{t,2} \\
 y_{t,3} \\
 \end{matrix}
-\right]=\boldsymbol{H}\boldsymbol{x}_{t} + \boldsymbol{\gamma}_{t}=\left[
+\right]=\boldsymbol{H}\boldsymbol{x}_{t} + \boldsymbol{\gamma}_{t}&=\left[
 \begin{matrix}
 0 & 1 & 0 & 0 & 0 \\
 0 & 0 & 0 & 1 & 0 \\
@@ -90,7 +91,28 @@ x_{t,5} \\
 \gamma_{t,2} \\
 \gamma_{t,3} \\
 \end{matrix}
+\right] \\
+&=\left[
+\begin{matrix}
+x_{t,2} \\
+x_{t,4} \\
+x_{t,5} \\
+\end{matrix}
+\right] + \left[
+\begin{matrix}
+\gamma_{t,1} \\
+\gamma_{t,2} \\
+\gamma_{t,3} \\
+\end{matrix}
+\right] \\
+&=\left[
+\begin{matrix}
+x_{t,2} + \gamma_{t,1} \\
+x_{t,4} + \gamma_{t,2} \\
+x_{t,5} + \gamma_{t,3} \\
+\end{matrix}
 \right]
+\end{aligned}
 $$
 
 Of course, other linear operations (such as averaging) are also viable. The observation error $\boldsymbol{\gamma}_{t}$ reflects the imprecision in our measurements and has an interesting role: it blurs the deterministic relationship between $\boldsymbol{x}_{t}$ and $\boldsymbol{y}_{t}$, which permits multiple different $\boldsymbol{x}_{t}$ values to produce the same observation value $\boldsymbol{y}_{t}^{*}$, although usually with different probability density.
