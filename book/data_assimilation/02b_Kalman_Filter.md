@@ -44,8 +44,8 @@ In the linear-Gaussian setting, the observation model is usually defined as:
 
 $$
 \begin{aligned}
-\boldsymbol{y} &= \boldsymbol{H}\boldsymbol{x} + \boldsymbol{\gamma} \\
-\boldsymbol{\gamma} &\sim \mathcal{N}(\boldsymbol{\mu}=\boldsymbol{0}, \boldsymbol{\Sigma} = \boldsymbol{R})
+\boldsymbol{y}_{t} &= \boldsymbol{H}\boldsymbol{x}_{t} + \boldsymbol{\gamma}_{t} \\
+\boldsymbol{\gamma}_{t} &\sim \mathcal{N}(\boldsymbol{\mu}=\boldsymbol{0}, \boldsymbol{\Sigma} = \boldsymbol{R})
 \end{aligned}
 $$
 
@@ -53,10 +53,10 @@ where
 
 $$
 \begin{aligned}
-\boldsymbol{y} & \quad \text{observation prediction}\\
+\boldsymbol{y}_{t} & \quad \text{observation prediction}\\
 \boldsymbol{H} & \quad \text{observation operator}\\
-\boldsymbol{x} & \quad \text{quantity of interest}\\
-\boldsymbol{\gamma} & \quad \text{observation error}\\
+\boldsymbol{x}_{t} & \quad \text{quantity of interest}\\
+\boldsymbol{\gamma}_{t} & \quad \text{observation error}\\
 \boldsymbol{R} & \quad \text{observation error covariance matrix}\\
 \end{aligned}
 $$
@@ -64,13 +64,13 @@ $$
 This may leave us with a number of questions: What is an "observation operator"? In practice, $\boldsymbol{H}$ is often just a matrix of ones and zeroes that extracts the observed states from the state vector $\boldsymbol{x}$:
 
 $$
-\boldsymbol{y} = \left[
+\boldsymbol{y}_{t} = \left[
 \begin{matrix}
-y_{1} \\
-y_{2} \\
-y_{3} \\
+y_{t,1} \\
+y_{t,2} \\
+y_{t,3} \\
 \end{matrix}
-\right]=\boldsymbol{H}\boldsymbol{x} + \boldsymbol{\gamma}=\left[
+\right]=\boldsymbol{H}\boldsymbol{x}_{t} + \boldsymbol{\gamma}_{t}=\left[
 \begin{matrix}
 0 & 1 & 0 & 0 & 0 \\
 0 & 0 & 0 & 1 & 0 \\
@@ -78,21 +78,74 @@ y_{3} \\
 \end{matrix}
 \right]\left[
 \begin{matrix}
-x_1 \\
-x_2 \\
-x_3 \\ 
-x_4 \\
-x_5 \\
+x_{t,1} \\
+x_{t,2} \\
+x_{t,3} \\ 
+x_{t,4} \\
+x_{t,5} \\
 \end{matrix}
 \right] + \left[
 \begin{matrix}
-\gamma_{1} \\
-\gamma_{2} \\
-\gamma_{3} \\
+\gamma_{t,1} \\
+\gamma_{t,2} \\
+\gamma_{t,3} \\
 \end{matrix}
 \right]
 $$
 
+Of course, other linear operations (such as averaging) are also viable. The observation error $\boldsymbol{\gamma}_{t}$ reflects the imprecision in our measurements and has an interesting role: it blurs the deterministic relationship between $\boldsymbol{x}_{t}$ and $\boldsymbol{y}_{t}$, which permits multiple different $\boldsymbol{x}_{t}$ values to produce the same observation value $\boldsymbol{y}_{t}^{*}$, although usually with different probability density.
+
+#### The forecast model
+
+Likewise, the forecast model in the linear-Gaussian setting is usually defined as:
+
+$$
+\begin{aligned}
+\boldsymbol{x}_{t+1} &= \boldsymbol{A}\boldsymbol{x}_{t} + \boldsymbol{\epsilon} \\
+\boldsymbol{\epsilon} &\sim \mathcal{N}(\boldsymbol{\mu}=\boldsymbol{0}, \boldsymbol{\Sigma} = \boldsymbol{Q})
+\end{aligned}
+$$
+
+where
+
+$$
+\begin{aligned}
+\boldsymbol{x}_{t+1} & \quad \text{state at time }t+1\\
+\boldsymbol{A} & \quad \text{linear model}\\
+\boldsymbol{x}_{t} & \quad \text{state at time }t\\
+\boldsymbol{\epsilon}_{t} & \quad \text{forecast error}\\
+\boldsymbol{Q} & \quad \text{forecast error covariance matrix}\\
+\end{aligned}
+$$
+
+If we start from a Gaussian filtering posterior $p(\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t}^{*})$, the mean and covariance of the filtering forecast are defined as:
+
+$$
+\begin{aligned}
+\boldsymbol{\mu}_{t+1} &= \boldsymbol{A}\boldsymbol{x}_{t} + \boldsymbol{\epsilon}_{t} \\
+\boldsymbol{\Sigma}_{t+1} &= \boldsymbol{A}\boldsymbol{\Sigma}_{\boldsymbol{x}_{t}}\boldsymbol{A}^\intercal + \boldsymbol{Q} \\
+\end{aligned}
+$$
+
+#### The assimilation step
+
+With these equations above, we can forecast a Gaussian distribution through time, and relate the states to observation predictions. Obtaining the filtering posterior in the assimilation step then becomes a simple application of the Gaussian conditioning operation:
+
+$$
+\begin{aligned}
+\boldsymbol{\mu}_{\boldsymbol{x}}^* &= \boldsymbol{\mu}_{\boldsymbol{x}} - \boldsymbol{\Sigma}_{\boldsymbol{x},\boldsymbol{y}}\boldsymbol{\Sigma}_{\boldsymbol{y},\boldsymbol{y}}^{-1}(\boldsymbol{\mu}_{\boldsymbol{y}} - \boldsymbol{y}^*) \\
+\boldsymbol{\Sigma}_{\boldsymbol{x}}^* &= \boldsymbol{\Sigma}_{\boldsymbol{x}} - \boldsymbol{\Sigma}_{\boldsymbol{x},\boldsymbol{y}}\boldsymbol{\Sigma}_{\boldsymbol{y},\boldsymbol{y}}^{-1}\boldsymbol{\Sigma}_{\boldsymbol{y},\boldsymbol{x}}
+\end{aligned}
+$$
+
+Inserting the identities above, we obtain the following Equations:
+
+$$
+\begin{aligned}
+\boldsymbol{\mu}_{\boldsymbol{x}}^* &= \boldsymbol{\mu}_{\boldsymbol{x}} - \overbrace{\boldsymbol{\Sigma}_{\boldsymbol{x},\boldsymbol{x}}\boldsymbol{H}^\intercal\left(\boldsymbol{H}\boldsymbol{\Sigma}_{\boldsymbol{x},\boldsymbol{x}}\boldsymbol{H}^\intercal + \boldsymbol{R}\right)^{-1}}^{\text{Kalman Gain }\boldsymbol{K}}(\boldsymbol{\mu}_{\boldsymbol{y}} - \boldsymbol{y}^*) \\
+\boldsymbol{\Sigma}_{\boldsymbol{x}}^* &= \boldsymbol{\Sigma}_{\boldsymbol{x}} - \boldsymbol{\Sigma}_{\boldsymbol{x},\boldsymbol{y}}\boldsymbol{\Sigma}_{\boldsymbol{y},\boldsymbol{y}}^{-1}\boldsymbol{\Sigma}_{\boldsymbol{y},\boldsymbol{x}}
+\end{aligned}
+$$
 
 The interactive figure below shows how conditioning a multivariate Gaussian PDF on different values affects its mean and covariance:
 
