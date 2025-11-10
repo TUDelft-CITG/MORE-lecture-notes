@@ -4,7 +4,7 @@ Fundamentally, all data assimilation (DA) algorithms leverage **Bayes' Theorem**
 
 - **states** are (typically) time-varying uncertain quantities of interest; typical examples of states would be quantities like soil moisture, temperature, wave height, stock price, blood pressure, or mechanical load. In this chapter, we will refer to states with the variable $\boldsymbol{x}$.
 - **parameters** are (typically) time-invariable uncertain quantities of interest; typical examples include the gravitational constant, the porosity of a subsurface medium, the geometry of a dike, or the volatility in a certain stock price. In this chapter, we will refer to parameters with the variable $\boldsymbol{\theta}$.
-- **observations** are properties of a system which we can measure or observe. These can be observations of states, parameters, or any combination thereof. In this chapter, we will refer to observations with the variable $\boldsymbol{y}^{*}$.
+- **observations** are properties of a system that we can measure or observe. These can be observations of states, parameters, or any combination thereof. In this chapter, we will refer to observations with the variable $\boldsymbol{y}^{*}$.
 
 Data assimilation further requires two important pieces - a **forecast model** and an **observation model**:
 

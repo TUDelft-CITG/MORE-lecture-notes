@@ -19,6 +19,32 @@ For instance, assume you are organizing a board game evening with a large group 
 ---
 
 ---
-You plan a board game evening, but your only brought a single die. But fear not! A quick session of rolling that die a thousand times and putting pieces of paper with the results into an urn creates an effective duplicate of the die, and it will only be marginally slower than setting up a better-organized boardgame evening.
+You plan a relaxing board game evening, but - oh no! - you only brought a single die. No worries. A quick session of rolling that die a thousand times, writing down the results on pieces of paper, and putting these pieces into an urn (Monte Carlo sampling) creates an effective duplicate of the die (the underlying distribution). And it will only be marginally slower than setting up that one complex strategy game your friend always brings along.
+```
+<br>
+
+Of course, in science and engineering, or setups are a bit more complex than simple die rolls. In the problems we care about, we usually have complex physical models that relate complex input variables to complex output variables. This would then require probability density functions which not only capture the complex relationships encoded in our models, but assign the correct probability density to any conceivable combination of inputs and outputs. This is a near-impossible task.
+
+<br>
+
+```{figure} ../figures/ensemble_setup_01.png
+
+---
+
+---
+In many settings, a joint PDF between model inputs and outputs does not only have to capture the physics encoded in the model, but the probability of the inputs and outputs.
+```
+<br>
+
+A Monte Carlo approximations simplifies this dramatically by considering samples from this unknowable PDF instead. Rather than attempting to describe the relationship for all conceivable combinations of inputs and outputs at once, we can consider an **ensemble** of input values, run the model for each of them, and obtain the corresponding output values. The resulting joint ensemble then describes some of the relationship between input and output variables. 
+
+<br>
+
+```{figure} ../figures/ensemble_setup_02.png
+
+---
+
+---
+An ensemble approximation uses the numerical model to establish a relationship between model inputs and model outputs. In the resulting Monte Carlo approximation, the model is only represented indirectly.
 ```
 <br>
