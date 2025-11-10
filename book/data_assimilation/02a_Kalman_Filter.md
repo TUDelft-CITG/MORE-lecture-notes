@@ -10,7 +10,7 @@ What makes the Gaussian case special is that the marginalization and conditionin
 
 <br>
 
-```{figure} ../figures/13_Gaussian_conditioning.gif
+```{figure} ../figures/13b_Gaussian_conditioning.gif
 
 ---
 
