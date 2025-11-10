@@ -41,7 +41,7 @@ As it turns out, there is a genetic link between hair color and eye color. If we
 
 After doing this, we obtain a **posterior estimate** of the bank robbers hair color: we remain confident that his hair color may have been brown (48% to 46%), have increased our belief that his hair color may have been blond (22% to 27%) or red (11% to 18%), and have halved our belief that his hair color may have been black (18% to 9%).
 
-<br><br>
+<br>
 
 ```{figure} ../figures/Bayesian_inference_hair_color_eye_color.png
 

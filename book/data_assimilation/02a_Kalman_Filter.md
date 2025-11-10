@@ -8,6 +8,17 @@ Fortunately, there exist a few special cases for which closed-form solutions exi
 
 What makes the Gaussian case special is that the marginalization and conditioning of a Gaussian PDF always return another Gaussian PDF. In fact, both operations reduce to simple manipulations of the mean and the covariance:
 
+<br>
+
+```{figure} ../figures/13_Gaussian_conditioning.gif
+
+---
+
+---
+The marginal and conditional PDFs of a Gaussian PDF are also Gaussian PDFs.
+```
+<br>
+
 #### Marginalization
 
 Assume that we have a mean and a covariance matrix in three dimensions, defined as:
@@ -100,3 +111,17 @@ $$
 \boldsymbol{\Sigma}_{\boldsymbol{x}}^* &= \boldsymbol{\Sigma}_{\boldsymbol{x}} - \boldsymbol{\Sigma}_{\boldsymbol{x},\boldsymbol{y}}\boldsymbol{\Sigma}_{\boldsymbol{y},\boldsymbol{y}}^{-1}\boldsymbol{\Sigma}_{\boldsymbol{y},\boldsymbol{x}}
 \end{aligned}
 $$
+
+### Use for Data Assimilation
+
+These properties make Gaussian distributions an attractive choice for Bayesian inference. The Bayesian filter that leverages this special case is known as the **Kalman Filter** (KF).
+
+The interactive figure below shows how conditioning a multivariate Gaussian PDF on different values affects its mean and covariance:
+
+````{iframe-figure} ../_static/elements/element_Gaussian_inference.html
+:name: Gaussian_inference
+:aspectratio: 1 / 1
+
+The Kalman filter's position update relies on three primary variables: the prior uncertainty (yellow), the observation error (blue), and the observation value (green). Adapt these values by dragging the sliders and observe how the compromise solution (the posterior; red) changes in response.
+````
+
