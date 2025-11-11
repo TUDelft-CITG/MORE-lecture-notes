@@ -40,10 +40,12 @@ parts:
            title: Ensemble Filtering
            sections:
             - file: data_assimilation/03a_Ensemble_Kalman_Filter.md
+              title: Ensemble Kalman Filter
               sections:
                 - file: data_assimilation/03aa_EnKF_pseudo_algorithm.md
                 - file: data_assimilation/03ab_Lemniscate_EnKF.md
                   title: Example
+                - file: data_assimilation/03ac_state_vector_augmentation.md
       - file: references.md
     # - file: changelog.md
     # - file: credits.md
