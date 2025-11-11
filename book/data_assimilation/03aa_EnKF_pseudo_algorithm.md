@@ -17,11 +17,11 @@ With a linear observation model $\boldsymbol{H}$, the EnKF can be implemented as
 
         - Generate observation predictions
 
-        $\boldsymbol{Y}_{t} &= \boldsymbol{H}\boldsymbol{X}_{t} + \boldsymbol{\gamma}, \quad \boldsymbol{\gamma} \sim \mathcal{N}(\boldsymbol{0},\boldsymbol{R})$
+        $\boldsymbol{Y}_{t} = \boldsymbol{H}\boldsymbol{X}_{t} + \boldsymbol{\gamma}, \quad \boldsymbol{\gamma} \sim \mathcal{N}(\boldsymbol{0},\boldsymbol{R})$
 
         - Update the Ensemble
 
-        $\boldsymbol{X}_{t}^{*} &= \boldsymbol{X}_{t} - \boldsymbol{K} (\boldsymbol{Y}_{t} - \boldsymbol{y}_{t}^{*})$
+        $\boldsymbol{X}_{t}^{*} = \boldsymbol{X}_{t} - \boldsymbol{K} (\boldsymbol{Y}_{t} - \boldsymbol{y}_{t}^{*})$
 
     2) **Forecast step**
         - Predict the next states
@@ -33,11 +33,17 @@ With a linear observation model $\boldsymbol{H}$, the EnKF can be implemented as
 #### Let's develop some intuition
 
 Because the EnKF updates samples, it reveals some interesting insights that can help us to developed further intuition about what the Kalman gain does. The image below illustrates what happens during an EnKF update:
+
     1) For each of the $N$ ensemble members, we have a state estimate $\boldsymbol{X}$ and an observation prediction $\boldsymbol{Y}$
+
     2) Together, both describe a position in the joint state-observation prediction space.
+
     3) The paranthesis in the EnKF's update equation quantifies the mismatch between each sample (horizontal position, blue line) and the observation (orange vertical bar)
+
     4) Multiplying this observation mismatch with the Kalman gain results in an update to the state (vertical movement, green line) while projecting the ensemble onto the subspace defined by the observation $\boldsymbol{y}^{*}$
+
     5) Because the update equation is linear, all these projections are linear and parallel. The greater the mismatch to the observations, the greater the update. In a sense, the Kalman gain acts like a (often multi-dimensional) slope.
+    
     6) We can see the difference between prior (black histogram) and posterior (orange histogram) in the left subplot.
 
 <br>
