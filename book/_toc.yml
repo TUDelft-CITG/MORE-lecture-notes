@@ -52,6 +52,9 @@ parts:
                 - file: data_assimilation/03ba_Importance_sampling.md
                 - file: data_assimilation/03bb_resampling.md
                 - file: data_assimilation/03bc_PF_pseudo_algorithm.md
+                - file: data_assimilation/03bd_Lemniscate_PF.md
+                  title: Example
+                - file: data_assimilation/03be_curse_of_dimensionality.md
       - file: references.md
     # - file: changelog.md
     # - file: credits.md

@@ -6,5 +6,5 @@ To see the EnKF in action, let us consider a small interactive example. In the e
 :name: lemniscate_enkf
 :aspectratio: 1.75 / 1
 
-Adjust the various sliders and models, and observe how the Kalman Filter's ability to track the true state changes in response. Which combinations work well, and why?
+Adjust the various sliders and models, and observe how the Ensemble Kalman Filter's ability to track the true state changes in response. Which combinations work well, and why?
 ````
