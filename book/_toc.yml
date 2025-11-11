@@ -46,6 +46,10 @@ parts:
                 - file: data_assimilation/03ab_Lemniscate_EnKF.md
                   title: Example
                 - file: data_assimilation/03ac_state_vector_augmentation.md
+            - file: data_assimilation/03b_Particle_Filter.md
+              title: Particle Filter
+              sections:
+                - file: data_assimilation/03ba_Importance_sampling.md
       - file: references.md
     # - file: changelog.md
     # - file: credits.md
