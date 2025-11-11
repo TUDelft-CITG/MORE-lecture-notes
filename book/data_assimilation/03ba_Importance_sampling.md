@@ -50,19 +50,19 @@ Particle filters rely on ensemble approximations to implement the assimiliation 
 
 1) apply importance sampling
 
-    $p(\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t}^{*}) = p(\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t-1}^{*}) \frac{p(\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t}^{*})}{p(\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t-1}^{*})}$
+    $$p(\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t}^{*}) = p(\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t-1}^{*}) \frac{p(\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t}^{*})}{p(\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t-1}^{*})}$$
 
 2) apply the Monte Carlo approximation (for i.i.d. samples, we have $w_{t-1}^{n} = 1/N$)
 
-    $p(\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t}^{*}) \approx \sum_{n=1}^{N} w_{t-1}^{n} \delta(\boldsymbol{X}_{t}^{n}) \frac{p(\boldsymbol{X}_{t}^{n}|\boldsymbol{y}_{1:t-1}^{*})p(\boldsymbol{y}_{t}^{*}|\boldsymbol{X}_{t}^{n})}{p(\boldsymbol{X}_{t}^{n}|\boldsymbol{y}_{1:t-1}^{*})p(\boldsymbol{y}_{t}^{*}|\boldsymbol{y}_{1:t-1}^{*})}$
+    $$p(\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t}^{*}) \approx \sum_{n=1}^{N} w_{t-1}^{n} \delta(\boldsymbol{X}_{t}^{n}) \frac{p(\boldsymbol{X}_{t}^{n}|\boldsymbol{y}_{1:t-1}^{*})p(\boldsymbol{y}_{t}^{*}|\boldsymbol{X}_{t}^{n})}{p(\boldsymbol{X}_{t}^{n}|\boldsymbol{y}_{1:t-1}^{*})p(\boldsymbol{y}_{t}^{*}|\boldsymbol{y}_{1:t-1}^{*})}$$
 
 3) use Bayes' Theorem
 
-    $p(\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t}^{*}) \approx \sum_{n=1}^{N} w_{t-1}^{n} \delta(\boldsymbol{X}_{t}^{n}) \frac{\cancel{p(\boldsymbol{X}_{t}^{n}|\boldsymbol{y}_{1:t-1}^{*})}p(\boldsymbol{y}_{t}^{*}|\boldsymbol{X}_{t}^{n})}{\cancel{p(\boldsymbol{X}_{t}^{n}|\boldsymbol{y}_{1:t-1}^{*})}p(\boldsymbol{y}_{t}^{*}|\boldsymbol{y}_{1:t-1}^{*})}$
+    $$$p(\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t}^{*}) \approx \sum_{n=1}^{N} w_{t-1}^{n} \delta(\boldsymbol{X}_{t}^{n}) \frac{\cancel{p(\boldsymbol{X}_{t}^{n}|\boldsymbol{y}_{1:t-1}^{*})}p(\boldsymbol{y}_{t}^{*}|\boldsymbol{X}_{t}^{n})}{\cancel{p(\boldsymbol{X}_{t}^{n}|\boldsymbol{y}_{1:t-1}^{*})}p(\boldsymbol{y}_{t}^{*}|\boldsymbol{y}_{1:t-1}^{*})}$$
 
 4) compute the new weights
 
-    $p(\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t}^{*}) \approx \sum_{n=1}^{N} \delta(\boldsymbol{X}_{t}^{n}) \underbrace{w_{t-1}^{n} \frac{p(\boldsymbol{y}_{t}^{*}|\boldsymbol{X}_{t}^{n})}{p(\boldsymbol{y}_{t}^{*}|\boldsymbol{y}_{1:t-1}^{*})} }_{\text{new weight }w_{t}^{n}}$
+    $$p(\boldsymbol{x}_{t}|\boldsymbol{y}_{1:t}^{*}) \approx \sum_{n=1}^{N} \delta(\boldsymbol{X}_{t}^{n}) \underbrace{w_{t-1}^{n} \frac{p(\boldsymbol{y}_{t}^{*}|\boldsymbol{X}_{t}^{n})}{p(\boldsymbol{y}_{t}^{*}|\boldsymbol{y}_{1:t-1}^{*})} }_{\text{new weight }w_{t}^{n}}$$
 
 In consequence, the weight $w_{t}^{n}$ is computed recursively from the weight $w_{t-1}^{n}$:
 
@@ -74,17 +74,19 @@ In practice, we do not know the normalizing factor $p(\boldsymbol{y}_{t}^{*}|\bo
 
 1) compute the unnormalized weights
 
-    $\widehat{w}_{t}^{n} = w_{t-1}^{n} p(\boldsymbol{y}_{t}^{*}|\boldsymbol{X}_{t}^{n}) $
+    $$\widehat{w}_{t}^{n} = w_{t-1}^{n} p(\boldsymbol{y}_{t}^{*}|\boldsymbol{X}_{t}^{n}) $$
 
 2) normalize weights over ensemble
 
-    $w_{t}^{n} = \frac{\widehat{w}_{t}^{n}}{\sum_{i=1}^{N}\widehat{w}_{t}^{i}}$
+    $$w_{t}^{n} = \frac{\widehat{w}_{t}^{n}}{\sum_{i=1}^{N}\widehat{w}_{t}^{i}}$$
 
 #### Example: painting with importance sampling
+
+This process may be a bit abstract, so the interactive element below highlights some of the principles behind importance sampling. Experiment with the element and try to develop intuition for when importance sampling works well, and when it doesn't.
 
 ````{iframe-figure} ../_static/elements/element_importance_sampling.html
 :name: importance_sampling
 :aspectratio: 1.75 / 1
 
-Adjust the various sliders and models, and observe how the Kalman Filter's ability to track the true state changes in response. Which combinations work well, and why?
+Select a 2D distribution to sample, and then select another distribution you want to approximate with importance sampling. Sample weight is represented with opacity: high weights are opaque, low weights are close to transparent. Why combinations of distributions work well, which don't, and why?
 ````
