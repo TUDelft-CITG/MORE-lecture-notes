@@ -35,7 +35,7 @@ $$
 
 where $dt$ is the time step length.
 
-Now assume that we have made a mistake! As it turns out, we have centered the prior for the gravitational constant at zero. In consequence, only some of our simulated cannonballs – those with a positive gravitational constant – fall to earth. The others disappear into space:
+Now assume that we have made a mistake: By accident, we have centered the prior for the gravitational constant at zero. In consequence, only some of our simulated cannonballs – those with a positive gravitational constant – fall to earth. The others disappear into space:
 
 ````{iframe-figure} ../_static/elements/element_state_vector_augmentation_01.html
 :name: state_vector_augmentation_01
@@ -44,3 +44,20 @@ Now assume that we have made a mistake! As it turns out, we have centered the pr
 Click the element to (re)start the simulation.
 ````
 
+Applying a conventional EnKF permits acceptable tracking of the true state, but does not fix the issue of the wrong gravitational constant:
+
+````{iframe-figure} ../_static/elements/element_state_vector_augmentation_02.html
+:name: state_vector_augmentation_02
+:aspectratio: 3 / 1
+
+Click the element to (re)start the simulation.
+````
+
+However, adding state-vector augmentation permits the filter to also infer parameters, which eventually learns something close to the true gravitational constant:
+
+````{iframe-figure} ../_static/elements/element_state_vector_augmentation_03.html
+:name: state_vector_augmentation_03
+:aspectratio: 3 / 1
+
+Click the element to (re)start the simulation.
+````
