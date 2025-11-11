@@ -55,6 +55,11 @@ parts:
                 - file: data_assimilation/03bd_Lemniscate_PF.md
                   title: Example
                 - file: data_assimilation/03be_curse_of_dimensionality.md
+      - file: data_assimilation/04_Grand_Prix.md
+        title: Grand Prix
+        sections:
+        - file: data_assimilation/04a_2024.md
+          title: 2024
       - file: references.md
     # - file: changelog.md
     # - file: credits.md
