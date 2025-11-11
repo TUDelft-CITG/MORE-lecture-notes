@@ -38,6 +38,10 @@ parts:
               title: Example
          - file: data_assimilation/03_Ensemble_Filters.md
            title: Ensemble Filtering
+           sections:
+            - file: data_assimilation/03a_Ensemble_Kalman_Filter.md
+              sections:
+                - file: data_assimilation/03aa_EnKF_pseudo_algorithm.md
       - file: references.md
     # - file: changelog.md
     # - file: credits.md
