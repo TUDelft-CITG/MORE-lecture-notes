@@ -50,6 +50,7 @@ parts:
               title: Particle Filter
               sections:
                 - file: data_assimilation/03ba_Importance_sampling.md
+                - file: data_assimilation/03bb_resampling.md
       - file: references.md
     # - file: changelog.md
     # - file: credits.md
