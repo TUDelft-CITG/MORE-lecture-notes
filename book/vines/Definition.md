@@ -73,3 +73,34 @@ $M =
   &   &   &   & 3 \\
 \end{bmatrix}
 $
+
+## It's your turn now!
+
+Draw the regular vine (and its decomposition in trees) corresponding to the following matrix.
+
+$M =
+\begin{bmatrix}
+2 & 2 & 3 & 1 & 2 & 4 & 5 \\
+  & 3 & 2 & 3 & 3 & 2 & 1 \\
+  &   & 1 & 2 & 1 & 3 & 3 \\
+  &   &   & 5 & 5 & 1 & 2 \\
+  &   &   &   & 4 & 5 & 4 \\
+  &   &   &   &  & 7 & 7 \\
+  &   &   &   &  &  & 6 \\
+\end{bmatrix}
+$
+
+```{admonition} Solution
+:class: tip, dropdown
+
+The regular vine corresponding to the above matrix is:
+
+![solution](./figures/exercise_vine.png)
+
+and it is composed of the following trees:
+
+![solution](./figures/exercise_trees.png)
+
+```
+
+.
