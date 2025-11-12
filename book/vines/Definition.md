@@ -1,7 +1,19 @@
-# Definition of vine-copula
+# Definition of regular vines
 
-As stated in Section [Minimal concepts of graph theory](graph_theory), a tree is a connected graph with no cycles. A *vine* is a sequence of trees $T_1,…,T_{n-1}$ such that the edges of $T_i$ become nodes of $T_{i+1}$ for $i=1,…,n-1$. If all edges in $T_i$ connected as nodes in $T_{i+1}$ are adjacent to a common node in $T_i$ then this is a regular vine. Figure \ref{D-vine-5} presents a regular vine with five nodes. 
+As stated in Section [Minimal concepts of graph theory](graph_theory), a tree is a connected graph with no cycles. A *vine* is a sequence of trees $T_1,…,T_{n-1}$ such that the edges of $T_i$ become nodes of $T_{i+1}$ for $i=1,…,d-1$. If all edges in $T_i$ connected as nodes in $T_{i+1}$ are adjacent to a common node in $T_i$ then this is a *regular vine*. We call this property the *proximity condition*.  For us, only regular vines will be of interest. Hence, in the following, we will restrict ourselves to this class of vines. The Figure below presents a regular vine with five nodes. In $T_1$ 3 is adjacent to 4; 4 is adjacent to 3 and 2; 2 is adjacent to 4 and 1; 1 is adjacent to 2 and 5; 5 is adjacent to 1. Thus, 3 has degree 1, 4 has degree 2, 2 has degree 2, 1 has degree 2 and 5 has degree 1. These types of trees are commonly referred to as "*lines*". That is, trees that have two nodes with degree one (*leafs*) and the rest with degree 2. 
+
+```{figure} ./figures/d_vine_5.png
+
+---
+
+---
+Example of *regular vine* on 5 nodes. Regular vines similar to this are called D-vines (D for drawable).
+```
+
+The rest of the tree sequence, that is, $T_2,\ldots,T_4$ is presented in the figures below. Notice that all trees in the sequence are \textit{lines}. For example, the nodes of $T_2$ are $\{3,4\}$, $\{4,2\}$, $\{2,1\}$ and $\{1,5\}$. The edge labeled as $2,3|4$ is incident to the nodes $\{3,4\}$ and $\{4,2\}$; $1,4|2$ is incident to the nodes $\{4,2\}$ and $\{2,1\}$; $2,5|1$ is incident to the nodes $\{2,1\}$ and $\{1,5\}$. Hence,  $\{4,2\}$ and $\{2,1\}$ have degree 2, while  $\{3,4\}$ and $\{1,5\}$ are \textit{leafs} in $T_2$. $T_3$ and $T_4$ follow the same logic as described so far. Regular vines such that, all trees in the sequence are \textit{lines}, are known as D-vines (for drawable vines). On an "opposite" extreme we have C-vine (for canonical). These vines have one node with maximal degree at each tree in the vine. Trees that have one node with maximal degree are often referred to as \textit{stars}. Thus C-vines have a star in each level of the regular vine. 
 
 
 
-In $T_1$ 3 is adjacent to 4; 4 is adjacent to 3 and 2; 2 is adjacent to 4 and 1; 1 is adjacent to 2 and 5; 5 is adjacent to 1. Thus, 3 has degree 1, 4 has degree 2, 2 has degree 2, 1 has degree 2 and 5 has degree 1. These types of trees are commonly referred to as "*lines*". That is, trees that have two nodes with degree one (*leafs*) and the rest with degree 2. 
+For an edge in a vine, the \textit{constraint set} is the set of nodes that the edge is incident to, and which constrain future edge selection. For example, consider $T_2$. There is one edge incident to $\{3,4\}$ and $\{4,2\}$. Its constraint set consists of these two sets. The \textit{conditioning set} is the intersection of nodes of the constraint sets. Thus, the conditioning set is $\{4\}$ in our example. the conditioned set is the "remaining" part, that is, $\{2,3\}$ in our example. For regular vines, the conditioned set always has two elements. In figures, \ref{D-vine-5} to \ref{D-vine-5-T4}, the conditioned set is presented to the left of the vertical line, and the conditioning set to the right. Notice that for $T_1$, the conditioning set is empty. 
+
+In later studies, the concept of graph \textit{isomorphism} will be relevant. Two graphs $G$ and $H$ are \textit{isomorphic} if there is a bijection between the node sets of $G$ and $H$; $f:V(G) \rightarrow V(H)$ such that any two nodes $u$ and $v$ of $G$ are adjacent in $G$ if and only if $f(u)$ and $f(v)$ are adjacent in $H$. Loosely speaking, isomorphism in this sense means that if we remove labels and directions from two graph, if the remaining graphs have the same "structure", they are isomorphic. For different regular vines, when $T_1,\ldots,T_{n-1}$ are isomorphic, that is, of the same type or structure, they are \textit{tree-equivalent}. When vines can be transformed into one another by permutation, they are in the same \textit{equivalence class}.  
