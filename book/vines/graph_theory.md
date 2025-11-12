@@ -18,8 +18,8 @@ will be used later in the rest of the thesis.
 An *undirected graph* $G = (N,E)$ consists of a finite non empty set $N$ of nodes, also called (points or vertices) and a possibly empty set $E$ of edges (lines or arcs) where each element is an unordered pair $(\alpha_1,\alpha_2)$, where $\alpha_1$ and $\alpha_2 \neq \alpha_1$ are elements of $N$. Without loss of generality,  when $N =\{1,2,...,n\}$ we speak of *labeled graphs*. It will be  assumed that two distinct edges do not join the same pair of nodes.  Graphs in which this is allowed are called *multigraphs*. Observe that no self-loops are permitted that is, edges joining nodes with itself. If the pair $(\alpha_1,\alpha_2)$ is ordered then $G$ is a *directed graph* and the pair $(\alpha_1,\alpha_2)$ will be represented as $\alpha_1 \rightarrow \alpha_2$. In this case $\alpha_1$ will be called a *parent* node of the *child* node $\alpha_2$. Examples of undirected and directed graphs are shown in the Figures below.
 
 <p>
-<img src="Hamilton.png" alt="Undirected graph" style="zoom:25%;" />
-<img src="HamiltonD.png" alt="Directed graph" style="zoom:25%;" />
+<img src="figures/Hamilton.png" alt="Undirected graph" style="zoom:25%;" />
+<img src="figures/HamiltonD.png" alt="Directed graph" style="zoom:25%;" />
 </p>
 
 <em>Figure 1. Examples of graphs: (left) undirected, and (right) directed.</em>
