@@ -35,9 +35,11 @@ $T_3$ for the previous regular vine.
 
 For an edge in a vine, the *constraint set* is the set of nodes that the edge is incident to, and which constrain future edge selection. For example, consider $T_2$. There is one edge incident to $\{3,4\}$ and $\{4,2\}$. Its constraint set consists of these two sets. The *conditioning set* is the intersection of nodes of the constraint sets. Thus, the conditioning set is $\{4\}$ in our example. the conditioned set is the "remaining" part, that is, $\{2,3\}$ in our example. For regular vines, the conditioned set always has two elements. In {numref}`tree2` and {numref}`tree3`, the conditioned set is presented to the left of the vertical line, and the conditioning set to the right. Notice that for $T_1$, the conditioning set is empty. 
 
+## Concept of isomorphism
+
 In later studies, the concept of graph *isomorphism* will be relevant. Two graphs $G$ and $H$ are *isomorphic* if there is a bijection between the node sets of $G$ and $H$; $f:V(G) \rightarrow V(H)$ such that any two nodes $u$ and $v$ of $G$ are adjacent in $G$ if and only if $f(u)$ and $f(v)$ are adjacent in $H$. Loosely speaking, isomorphism in this sense means that if we remove labels and directions from two graph, if the remaining graphs have the same "structure", they are isomorphic. For different regular vines, when $T_1,\ldots,T_{n-1}$ are isomorphic, that is, of the same type or structure, they are *tree-equivalent*. When vines can be transformed into one another by permutation, they are in the same *equivalence class*. 
 
-{numref}`fig_book` presents the 6 equivalence classes of regular vines on 5 nodes. Notice that {numref}`tree3`(a) corresponds to a D-vine; The regular vines in {numref}`tree3`(c) and (d) are tree-equivalent but correspond to different equivalence classes, and {numref}`tree3`(f) is a C-vine. There are 60 D-vines on 5 nodes; 120 regular vines similar to the one in {numref}`tree3`(b); 60 as in {numref}`tree3`(c);  120 as in {numref}`tree3`(d); 60 as in F{numref}`tree3`(e); and 60 C-vines on 5 nodes. 
+{numref}`fig_book` presents the 6 equivalence classes of regular vines on 5 nodes. Notice that {numref}`fig_book`(a) corresponds to a D-vine; The regular vines in {numref}`fig_book`(b) and (c) are tree-equivalent but correspond to different equivalence classes, and {numref}`fig_book`(e) is a C-vine. There are 60 D-vines on 5 nodes; 120 regular vines similar to the one in {numref}`fig_book`(f); 60 as in {numref}`fig_book`(b);  120 as in {numref}`fig_book`(c); 60 as in F{numref}`fig_book`(d); and 60 C-vines on 5 nodes. 
 
 ```{figure} ./figures/fig_book.png
 :name: fig_book
@@ -46,3 +48,28 @@ In later studies, the concept of graph *isomorphism* will be relevant. Two graph
 ---
 Examples for the 6 equivalence classes of regular vines on 5 nodes.
 ```
+
+## Matrix representation
+
+Regular vines are represented through a *vine copula matrix*. A vine copula matrix is an upper-triangular matrix that encodes the structure of a regular vine, specifying the order of variables and the sequence of conditional dependencies in the vine. More formally, let $M$ be an upper triangular matrix with entries $m_{i,j}$ for $i\leq j$. The elements $m_{i,j}$ take values in $\{1,\ldots, d\}$. The matrix $M$ is called a *regular vine matrix* or a *matrix representation of a regular vine*, if it satisfies the following conditions:
+
+
+1.  $\{m_{1,i},\ldots,m_{i,i}\}\subset\{m_{1,j},\ldots,m_{j,j}\}$  for $1\leq i\le j\leq d$. This means that, the entries of a specific column are also contained in all columns right of this column.
+
+2.  $m_{i,i} \notin \{m_{1,i-1},\ldots,m_{i-1,i-1}\}$. This means that, the diagonal entry of a column does not appear in any column further to the left.
+   
+3. For $i=3,\ldots,d$ and $k=1,…,i-1$ there exist $(j, l)$ with $j\le i$ and $l \le j$ such that $\{m_{k,i},\{m_{1,i},\ldots,m_{k-1,i}\}\} = \{m_{j,j},\{m_{1,j},\ldots,m_{l,j}\}\}$   or \\$\{m_{k,i},\{m_{1,i},\ldots,m_{k-1,i}\}\}=\{m_{l,j},\{m_{1,j},\ldots,m_{l-1,j},m_{j,j}\}\}$. This last statement means that the elements of $M$ should comply with the proximity condition for regular vines. 
+
+The diagonal elements $m_{i,i}$ represent the variables in a particular order while upper-diagonal elements $m_{i,j} ,(i\leq j)$ determine the conditioning and conditioned sets of the pair copulas in the vine.
+
+For example, matrix $M$ below is a regular vine matrix for the regular vine in {numref}`fig_book`(b). Where, $(m_{2,2},m_{1,2} )=(4,5)$; $(m_{3,3},m_{1,3} )=(2,4)$; $(m_{4,4},m_{1,4})=(1,2)$ and $(m_{5,5},m_{1,5} )=(3,4)$ represent $T_1$. $(m_{3,3},m_{2,3} |m_{1,3} )=(2,5|4)$; $(m_{4,4},m_{2,4} |m_{1,4} )=(1,4|2)$; and  $(m_{5,5},m_{2,5} |m_{1,5} )=(3,2|4)$ represent $T_2$. $(m_{4,4},m_{3,4} |m_{2,4},m_{1,4} )=(1,5|4,2)$ and $(m_{5,5},m_{3,5} |m_{2,5},m_{1,5} )=(3,1|2,4)$ constitute $T_3$ and $T_4$ has as single edge $(m_{5,5},m_{4,5} |m_{3,5},m_{2,5},m_{1,5} )=(3,5|1,2,4)$.
+
+$M =
+\begin{bmatrix}
+5 & 5 & 4 & 2 & 4 \\
+  & 4 & 5 & 4 & 2 \\
+  &   & 2 & 5 & 1 \\
+  &   &   & 1 & 5 \\
+  &   &   &   & 3 \\
+\end{bmatrix}
+$
