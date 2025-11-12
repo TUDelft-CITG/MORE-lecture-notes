@@ -42,25 +42,25 @@ parts:
             - file: data_assimilation/02b_Kalman_Filter.md
             - file: data_assimilation/02c_Kalman_Filter_example.md
               title: Example
-        #  - file: data_assimilation/03_Ensemble_Filters.md
-        #    title: Ensemble Filtering
-        #    sections:
-        #     - file: data_assimilation/03a_Ensemble_Kalman_Filter.md
-        #       title: Ensemble Kalman Filter
-        #       sections:
-        #         - file: data_assimilation/03aa_EnKF_pseudo_algorithm.md
-        #         - file: data_assimilation/03ab_Lemniscate_EnKF.md
-        #           title: Example
-        #         - file: data_assimilation/03ac_state_vector_augmentation.md
-        #     - file: data_assimilation/03b_Particle_Filter.md
-        #       title: Particle Filter
-        #       sections:
-        #         - file: data_assimilation/03ba_Importance_sampling.md
-        #         - file: data_assimilation/03bb_resampling.md
-        #         - file: data_assimilation/03bc_PF_pseudo_algorithm.md
-        #         - file: data_assimilation/03bd_Lemniscate_PF.md
-        #           title: Example
-        #         - file: data_assimilation/03be_curse_of_dimensionality.md
+         -  file: data_assimilation/03_Ensemble_Filters.md
+           title: Ensemble Filtering
+           sections:
+            - file: data_assimilation/03a_Ensemble_Kalman_Filter.md
+              title: Ensemble Kalman Filter
+              sections:
+                - file: data_assimilation/03aa_EnKF_pseudo_algorithm.md
+                - file: data_assimilation/03ab_Lemniscate_EnKF.md
+                  title: Example
+                - file: data_assimilation/03ac_state_vector_augmentation.md
+            # - file: data_assimilation/03b_Particle_Filter.md
+            #   title: Particle Filter
+            #   sections:
+            #     - file: data_assimilation/03ba_Importance_sampling.md
+            #     - file: data_assimilation/03bb_resampling.md
+            #     - file: data_assimilation/03bc_PF_pseudo_algorithm.md
+            #     - file: data_assimilation/03bd_Lemniscate_PF.md
+            #       title: Example
+            #     - file: data_assimilation/03be_curse_of_dimensionality.md
         #  - file: data_assimilation/04_Grand_Prix.md
         #    title: Grand Prix
         #    sections:
