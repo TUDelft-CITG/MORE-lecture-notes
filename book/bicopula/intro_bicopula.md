@@ -18,3 +18,6 @@ Here, we will focus on **bivariate copulas**, which involve modeling two variabl
 
 </div>
 
+The material in the following chapters is primarily based on the book:  
+
+Czado, Claudia. *Analyzing Dependent Data with Vine Copulas.* Lecture Notes in Statistics, Springer, Vol. 222, 2019.
