@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta name="description" content="A very bad cannon model">
+    <title>A very bad cannon model</title>
+    <script src="https://unpkg.com/mathjs/lib/browser/math.js"></script>
+    
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://d3js.org/d3-hsv.v0.1.min.js"></script>
+    <script src="https://d3js.org/d3-contour.v1.min.js"></script>
+    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+    <script src="https://d3js.org/d3-ease.v2.min.js"></script>
+    <style>
+
+    </style>
+  </head>
+
+<!-- Create a div where the graph will take place -->
+<div id="my_dataviz">
+  <svg id="click" xmlns="http://www.w3.org/2000/svg" style="background-color:#ffffff">
+      <defs>
+          <g id="pointer" transform="scale(0.5)">
+              <circle cx="0" cy="0" r="20" id="dragcircle" />
+          </g>
+      </defs>
+      
+  </svg>
+</div>
+
+
+
+  <body style='overflow:hidden'>
+  
+    <script>
+    
+      const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
+      const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
+      
+      const aspect 	= 3;
+      
+      if (vw/aspect < vh) {
+      	// Viewport width is limiting
+        var width 	= vw;
+        var height 	= vw/aspect;
+      } else {
+      	// Viewport height is limiting
+      	var width 	= vh*aspect;
+        var height 	= vh;
+      }
+      
+      var distance_per_pixel = 0.75*height/100;
+      
+      //const width_offset 		= 0.025*width;
+      //const height_offset 	= 0.05*height;
+      
+      const delay   = 25;
+      
+      // Define variables for the true cannonball
+      var cb_x 			= 0; 		// Horizontal distance to cannon
+      var cb_y 			= 100; 	// Position relative to ground
+      var cb_hvel 	= 80; 	// Horizontal velocity
+      var cb_vvel 	= 0; 		// Vertical velocity
+      
+      const mod_sd 	= 1;
+      const obs_sd 	= 1;
+      const pri_g_mn= 0;
+      const pri_g_sd= 10;
+      const g_sd 		= 0.5;
+      
+			var ensemble
+      
+      // Define variables for the model cannonball
+      var mb_x 			= [0,0,0,0,0,0,0,0,0,0]; 		// Horizontal distance to cannon
+      var mb_y 			= [100,100,100,100,100,100,100,100,100,100]; 	// Position relative to ground
+      var mb_hvel 	= [80,80,80,80,80,80,80,80,80,80]; 	// Horizontal velocity
+      var mb_vvel 	= [0,0,0,0,0,0,0,0,0,0]; 		// Vertical velocity
+      var mb_g 			= [
+      	Gaussian_sample(pri_g_mn,pri_g_sd),
+        Gaussian_sample(pri_g_mn,pri_g_sd),
+        Gaussian_sample(pri_g_mn,pri_g_sd),
+        Gaussian_sample(pri_g_mn,pri_g_sd),
+        Gaussian_sample(pri_g_mn,pri_g_sd),
+        Gaussian_sample(pri_g_mn,pri_g_sd),
+        Gaussian_sample(pri_g_mn,pri_g_sd),
+        Gaussian_sample(pri_g_mn,pri_g_sd),
+        Gaussian_sample(pri_g_mn,pri_g_sd),
+        Gaussian_sample(pri_g_mn,pri_g_sd)]; 		// Vertical velocity
+        
+      var noise_vvel= [0,0,0,0,0,0,0,0,0,0];
+      
+      var g 				= -9.81 // Gravitational acceleration constant
+      var t 				= 0; 		// Initial time
+      const dt 			= 0.03; 	// Time step length
+      
+
+      
+      const resample_frequency = 15;
+      
+      var svg = d3.select("#click") // This selects the div
+          .attr("width", width) // This defines the canvas' width
+          .attr("height", height) // This defines the canvas' height
+          
+      // =================================================================    
+      // Create legend
+      // =================================================================  
+      
+      svg
+      	.append('circle')
+        .attr('cx', width*0.025)
+        .attr('cy', height*0.1)
+        .attr("stroke-width", 3*height/600)
+        .attr("fill", "#333333")
+        .attr("r", 8*height/600)
+      svg.append("text")             
+          .attr("transform",
+                "translate("+(width*0.05).toString()+","+(height*0.12).toString()+")")
+          .style("text-anchor", "left")
+          .text("truth")
+          .style("font-family", "arial")
+          .style("font-size", (12*width/600).toString()+"px")
+          
+      svg
+      	.append('circle')
+        .attr('cx', width*0.15)
+        .attr('cy', height*0.1)
+        .attr("stroke-width", 3*height/600)
+        .attr("fill", "#FF5000")
+        .attr("r", 8*height/600)
+      svg.append("text")             
+          .attr("transform",
+                "translate("+(width*0.175).toString()+","+(height*0.12).toString()+")")
+          .style("text-anchor", "left")
+          .text("observation")
+          .style("font-family", "arial")
+          .style("font-size", (12*width/600).toString()+"px")
+          
+      svg
+      	.append('circle')
+        .attr('cx', width*0.325)
+        .attr('cy', height*0.1)
+        .attr("stroke-width", 3*height/600)
+        .attr("fill", "#4794c1")
+        .attr("r", 8*height/600)
+      svg.append("text")             
+          .attr("transform",
+                "translate("+(width*0.35).toString()+","+(height*0.12).toString()+")")
+          .style("text-anchor", "left")
+          .text("ensemble mean")
+          .style("font-family", "arial")
+          .style("font-size", (12*width/600).toString()+"px")
+          
+      svg
+      	.append('circle')
+        .attr('cx', width*0.525)
+        .attr('cy', height*0.1)
+        .attr("stroke-width", 3*height/600)
+        .attr("fill", "#4794c1")
+        .attr("opacity", 0.25)
+        .attr("r", 8*height/600)
+      svg.append("text")             
+          .attr("transform",
+                "translate("+(width*0.55).toString()+","+(height*0.12).toString()+")")
+          .style("text-anchor", "left")
+          .text("particle")
+          .style("font-family", "arial")
+          .style("font-size", (12*width/600).toString()+"px")
+          
+          
+      svg.append("line")
+        .attr("x1", width*0.67)
+        .attr("y1", height*0.075)
+        .attr("x2", width*0.67)
+        .attr("y2", height*0.125)
+        .attr("stroke", "black")
+        .attr("stroke-width", height/100)
+        .attr("marker-end", "url(#scalable-arrowhead)"); // Attach the arrowhead
+      svg.append("text")             
+          .attr("transform",
+                "translate("+(width*0.695).toString()+","+(height*0.12).toString()+")")
+          .style("text-anchor", "left")
+          .text("true g")
+          .style("font-family", "arial")
+          .style("font-size", (12*width/600).toString()+"px")
+
+
+      svg.append("line")
+        .attr("x1", width*0.8)
+        .attr("y1", height*0.125)
+        .attr("x2", width*0.8)
+        .attr("y2", height*0.075)
+        .attr("stroke", "#0485d1")
+        .attr("stroke-width", height/100)
+        .attr("marker-end", "url(#scalable-arrowhead-ensemble)"); // Attach the arrowhead
+      svg.append("text")             
+          .attr("transform",
+                "translate("+(width*0.825).toString()+","+(height*0.12).toString()+")")
+          .style("text-anchor", "left")
+          .text("mean g")
+          .style("font-family", "arial")
+          .style("font-size", (12*width/600).toString()+"px")
+          
+          
+          
+      // =================================================================    
+      // Create cannonball elements
+      // =================================================================  
+          
+			var cbm_mean = svg.append("circle")
+        .attr("r", 10*height/450)
+        .attr("cx", 0.05*width)
+        .attr("cy", 0.25*height)
+        .attr("fill", "#4794c1")
+        .attr("stroke", "#4794c1")
+        .attr("stroke-width", 2.5*height/450)
+        .attr("id","cbm_mean");
+          
+			var cbm1 = svg.append("circle")
+        .attr("r", 10*height/450)
+        .attr("cx", 0.05*width)
+        .attr("cy", 0.25*height)
+        .attr("fill", "#4794c1")
+        .attr("stroke", "#4794c1")
+        .attr("stroke-width", 2.5*height/450)
+        .attr("opacity", 0.25)
+        .attr("id","cbm1");
+        
+			var cbm2 = svg.append("circle")
+        .attr("r", 10*height/450)
+        .attr("cx", 0.05*width)
+        .attr("cy", 0.25*height)
+        .attr("fill", "#4794c1")
+        .attr("stroke", "#4794c1")
+        .attr("stroke-width", 2.5*height/450)
+        .attr("opacity", 0.25)
+        .attr("id","cbm2");
+        
+			var cbm3 = svg.append("circle")
+        .attr("r", 10*height/450)
+        .attr("cx", 0.05*width)
+        .attr("cy", 0.25*height)
+        .attr("fill", "#4794c1")
+        .attr("stroke", "#4794c1")
+        .attr("stroke-width", 2.5*height/450)
+        .attr("opacity", 0.25)
+        .attr("id","cbm3");
+        
+			var cbm4 = svg.append("circle")
+        .attr("r", 10*height/450)
+        .attr("cx", 0.05*width)
+        .attr("cy", 0.25*height)
+        .attr("fill", "#4794c1")
+        .attr("stroke", "#4794c1")
+        .attr("stroke-width", 2.5*height/450)
+        .attr("opacity", 0.25)
+        .attr("id","cbm4");
+        
+			var cbm5 = svg.append("circle")
+        .attr("r", 10*height/450)
+        .attr("cx", 0.05*width)
+        .attr("cy", 0.25*height)
+        .attr("fill", "#4794c1")
+        .attr("stroke", "#4794c1")
+        .attr("stroke-width", 2.5*height/450)
+        .attr("opacity", 0.25)
+        .attr("id","cbm5");
+        
+			var cbm6 = svg.append("circle")
+        .attr("r", 10*height/450)
+        .attr("cx", 0.05*width)
+        .attr("cy", 0.25*height)
+        .attr("fill", "#4794c1")
+        .attr("stroke", "#4794c1")
+        .attr("stroke-width", 2.5*height/450)
+        .attr("opacity", 0.25)
+        .attr("id","cbm6");
+        
+			var cbm7 = svg.append("circle")
+        .attr("r", 10*height/450)
+        .attr("cx", 0.05*width)
+        .attr("cy", 0.25*height)
+        .attr("fill", "#4794c1")
+        .attr("stroke", "#4794c1")
+        .attr("stroke-width", 2.5*height/450)
+        .attr("opacity", 0.25)
+        .attr("id","cbm7");
+        
+			var cbm8 = svg.append("circle")
+        .attr("r", 10*height/450)
+        .attr("cx", 0.05*width)
+        .attr("cy", 0.25*height)
+        .attr("fill", "#4794c1")
+        .attr("stroke", "#4794c1")
+        .attr("stroke-width", 2.5*height/450)
+        .attr("opacity", 0.25)
+        .attr("id","cbm8");
+        
+			var cbm9 = svg.append("circle")
+        .attr("r", 10*height/450)
+        .attr("cx", 0.05*width)
+        .attr("cy", 0.25*height)
+        .attr("fill", "#4794c1")
+        .attr("stroke", "#4794c1")
+        .attr("stroke-width", 2.5*height/450)
+        .attr("opacity", 0.25)
+        .attr("id","cbm9");
+        
+			var cbm10 = svg.append("circle")
+        .attr("r", 10*height/450)
+        .attr("cx", 0.05*width)
+        .attr("cy", 0.25*height)
+        .attr("fill", "#4794c1")
+        .attr("stroke", "#4794c1")
+        .attr("stroke-width", 2.5*height/450)
+        .attr("opacity", 0.25)
+        .attr("id","cbm10");
+        
+			var cannonball_real = svg.append("circle")
+        .attr("r", 10*height/450)
+        .attr("cx", 0.05*width)
+        .attr("cy", 0.25*height)
+        .attr("fill", "#333333")
+        .attr("stroke", "#333333")
+        .attr("stroke-width", 2.5*height/450)
+        .attr("id","cannonball_real");
+        
+        
+      var lineGenerator = d3.line();
+      
+      lineGenerator.defined(function(d) { return !isNaN(d[1]); });
+        
+      var data_cbr = [[0.05*width, 0.25*height]];
+      var pathString_cbr = lineGenerator(data_cbr);
+      var line_cbr = svg.append('path')
+      	.attr("d", pathString_cbr)
+        .attr("stroke-width", 5*height/450)
+        .attr("fill", "none")
+        .style("stroke-dasharray", ("3vw,1vw")) // make the stroke dashed
+        .attr("stroke", "#cccccc")
+        .attr("id", "track_real")
+        
+      var data_mbr_mean = [[0.05*width, 0.25*height]];
+      var pathString_mbr_mean = lineGenerator(data_mbr_mean);
+      var line_mbr_mean = svg.append('path')
+      	.attr("d", pathString_mbr_mean)
+        .attr("stroke-width", 5*height/450)
+        .attr("fill", "none")
+        .style("stroke-dasharray", ("3vw,1vw")) // make the stroke dashed
+        .attr("stroke", "#4794c1")
+        .attr("id", "track_mbr_mean")
+        
+      var data_mbr1 = [[0.05*width*0.9, 0.25*height]];
+      var pathString_mbr1 = lineGenerator(data_mbr1);
+      var line_mbr1 = svg.append('path')
+      	.attr("d", pathString_mbr1)
+        .attr("stroke-width", 3*height/450)
+        .attr("fill", "none")
+        .attr("stroke", "#4794c1")
+        .attr("opacity", 0.25)
+        .attr("id", "track_model1")
+        
+      var data_mbr2 = [[0.05*width*0.9, 0.25*height]];
+      var pathString_mbr2 = lineGenerator(data_mbr2);
+      var line_mbr2 = svg.append('path')
+      	.attr("d", pathString_mbr2)
+        .attr("stroke-width", 3*height/450)
+        .attr("fill", "none")
+        .attr("stroke", "#4794c1")
+        .attr("opacity", 0.25)
+        .attr("id", "track_model2")
+
+      var data_mbr3 = [[0.05*width*0.9, 0.25*height]];
+      var pathString_mbr3 = lineGenerator(data_mbr3);
+      var line_mbr3 = svg.append('path')
+      	.attr("d", pathString_mbr3)
+        .attr("stroke-width", 3*height/450)
+        .attr("fill", "none")
+        .attr("stroke", "#4794c1")
+        .attr("opacity", 0.25)
+        .attr("id", "track_model3")
+        
+      var data_mbr4 = [[0.05*width*0.9, 0.25*height]];
+      var pathString_mbr4 = lineGenerator(data_mbr4);
+      var line_mbr4 = svg.append('path')
+      	.attr("d", pathString_mbr4)
+        .attr("stroke-width", 3*height/450)
+        .attr("fill", "none")
+        .attr("stroke", "#4794c1")
+        .attr("opacity", 0.25)
+        .attr("id", "track_model4")
+        
+      var data_mbr5 = [[0.05*width*0.9, 0.25*height]];
+      var pathString_mbr5 = lineGenerator(data_mbr5);
+      var line_mbr5 = svg.append('path')
+      	.attr("d", pathString_mbr5)
+        .attr("stroke-width", 3*height/450)
+        .attr("fill", "none")
+        .attr("stroke", "#4794c1")
+        .attr("opacity", 0.25)
+        .attr("id", "track_model5")
+        
+      var data_mbr6 = [[0.05*width*0.9, 0.25*height]];
+      var pathString_mbr6 = lineGenerator(data_mbr6);
+      var line_mbr6 = svg.append('path')
+      	.attr("d", pathString_mbr6)
+        .attr("stroke-width", 3*height/450)
+        .attr("fill", "none")
+        .attr("stroke", "#4794c1")
+        .attr("opacity", 0.25)
+        .attr("id", "track_model6")
+        
+      var data_mbr7 = [[0.05*width*0.9, 0.25*height]];
+      var pathString_mbr7 = lineGenerator(data_mbr7);
+      var line_mbr7 = svg.append('path')
+      	.attr("d", pathString_mbr7)
+        .attr("stroke-width", 3*height/450)
+        .attr("fill", "none")
+        .attr("stroke", "#4794c1")
+        .attr("opacity", 0.25)
+        .attr("id", "track_model7")
+
+      var data_mbr8 = [[0.05*width*0.9, 0.25*height]];
+      var pathString_mbr8 = lineGenerator(data_mbr8);
+      var line_mbr8 = svg.append('path')
+      	.attr("d", pathString_mbr8)
+        .attr("stroke-width", 3*height/450)
+        .attr("fill", "none")
+        .attr("stroke", "#4794c1")
+        .attr("opacity", 0.25)
+        .attr("id", "track_model8")
+        
+      var data_mbr9 = [[0.05*width*0.9, 0.25*height]];
+      var pathString_mbr9 = lineGenerator(data_mbr9);
+      var line_mbr9 = svg.append('path')
+      	.attr("d", pathString_mbr9)
+        .attr("stroke-width", 3*height/450)
+        .attr("fill", "none")
+        .attr("stroke", "#4794c1")
+        .attr("opacity", 0.25)
+        .attr("id", "track_model9")
+        
+      var data_mbr10 = [[0.05*width*0.9, 0.25*height]];
+      var pathString_mbr10 = lineGenerator(data_mbr10);
+      var line_mbr10 = svg.append('path')
+      	.attr("d", pathString_mbr10)
+        .attr("stroke-width", 3*height/450)
+        .attr("fill", "none")
+        .attr("stroke", "#4794c1")
+        .attr("opacity", 0.25)
+        .attr("id", "track_model10")
+        
+        
+        
+      const data_cannon = [
+      	[width*0.03,height*0.28],
+        [width*0.06,height*0.28],
+        [width*0.06,height*0.22],
+        [width*0.03,height*0.22]];
+      var pathString_cannon = lineGenerator(data_cannon);
+      var cannon = svg.append('path')
+      	.attr("d", pathString_cannon)
+        .attr("stroke-width", 0)
+        .attr("fill", "#999999")
+        .attr("id", "cannon")
+			svg.append("circle")
+        .attr("r", height*0.029)
+        .attr("cx", width*0.03)
+        .attr("cy", height*0.25)
+        .attr("fill", "#999999");
+        
+      const data_cannon_base = [
+      	[width*0.035, 	height*0.27],
+        [width*0.055,		height*0.27],
+        [width*0.055,		height*0.35],
+        [width*0.02,		height*0.35],
+        [width*0.02,		height*0.325],
+        [width*0.03,		height*0.31],
+        [width*0.033,	height*0.3],
+        [width*0.035,		height*0.29]];
+      var pathString_cannon_base = lineGenerator(data_cannon_base);
+      var cannon_base = svg.append('path')
+      	.attr("d", pathString_cannon_base)
+        .attr("stroke-width", 0)
+        .attr("fill", "#666666")
+        .attr("id", "cannon")
+        
+      const data_cliff = [
+      	[0,height],
+        [0,height*0.33],
+        [width*0.07,height*0.33],
+        [width*0.08,height*0.34],
+        [width*0.09,height*0.36],
+        [width*0.1,height*0.4],
+        [width*0.107,height*0.45],
+        [width*0.11,height*0.5],
+        [width*0.115,height*0.7],
+        [width*0.12,height*0.8],
+        [width*0.125,height*0.9],
+        [width*0.13,height*0.95],
+        [width*0.14,height*0.975],
+        [width,height*0.975],
+        [width,height],
+        [0,height]]
+      var pathString_cliff = lineGenerator(data_cliff);
+      var cliff = svg.append('path')
+      	.attr("d", pathString_cliff)
+        .attr("stroke-width", 0)
+        .attr("fill", "#999999")
+        .attr("id", "cliff")
+
+      // helper function to output formatted results.
+      function print(value) {
+        var precision = 14;
+        document.write(math.format(value, precision) + '<br>');
+      }
+      
+      var autoupdate;
+      autoupdate = d3.timer(update)
+      function startRotation(delay) {
+        autoupdate.restart(update, delay || 0)
+      }
+        
+      svg
+        .call(d3.drag()
+          .on('start', clickdetector)
+         )
+         
+      var t = d3.transition()
+          .duration(750)
+          .ease(d3.easeLinear);
+          
+      var cannon_fired = false;
+      var lastTime = d3.now();
+      var now
+      
+      var counter 	= d3.now();
+      
+
+      // Start point in pixels
+      var xpx 			= 0.05*width;
+      var ypx 			= 0.25*height;
+      
+      //print(Gaussian_sample(0,1))
+      
+      var dt_counter = 0;
+      
+      // Define the arrowhead marker with dynamic scaling
+      const markerSize = 3; // Size relative to height
+      svg.append("defs")
+        .append("marker")
+        .attr("id", "scalable-arrowhead-ensemble")
+        .attr("viewBox", "0 0 10 10")
+        .attr("refX", 5) // Adjust for arrowhead position
+        .attr("refY", 5)
+        .attr("markerWidth", markerSize * (height / 400)) // Scale with canvas height
+        .attr("markerHeight", markerSize * (height / 400))
+        .attr("orient", "auto")
+        .append("path")
+        .attr("d", "M 0 0 L 10 5 L 0 10 Z")
+        .attr("fill", "#4794c1");
+      
+      svg.append("defs")
+        .append("marker")
+        .attr("id", "scalable-arrowhead")
+        .attr("viewBox", "0 0 10 10")
+        .attr("refX", 5) // Adjust for arrowhead position
+        .attr("refY", 5)
+        .attr("markerWidth", markerSize * (height / 400)) // Scale with canvas height
+        .attr("markerHeight", markerSize * (height / 400))
+        .attr("orient", "auto")
+        .append("path")
+        .attr("d", "M 0 0 L 10 5 L 0 10 Z")
+        .attr("fill", "black");
+      
+      
+      
+      const H = [[1, 0]];
+      
+
+      function update(elapsed) {
+        
+        //diff = now - lastTime
+        
+        if (cannon_fired == true) {
+        
+        	now = d3.now()
+        	diff = now - counter
+          
+          if (diff >= delay) {
+          
+          counter = now;
+          
+          t 			+= dt;
+          
+          dt_counter += 1;
+        
+          // Update the position
+          cb_x 		+= cb_hvel*dt;
+          cb_y 		+= cb_vvel*dt;
+
+          // Update the velocity
+          cb_vvel += g*dt;
+
+          // Update the model position
+          mb_x[0] 		+= mb_hvel[0]*dt;
+          mb_x[1] 		+= mb_hvel[1]*dt;
+          mb_x[2] 		+= mb_hvel[2]*dt;
+          mb_x[3] 		+= mb_hvel[3]*dt;
+          mb_x[4] 		+= mb_hvel[4]*dt;
+          mb_x[5] 		+= mb_hvel[5]*dt;
+          mb_x[6] 		+= mb_hvel[6]*dt;
+          mb_x[7] 		+= mb_hvel[7]*dt;
+          mb_x[8] 		+= mb_hvel[8]*dt;
+          mb_x[9] 		+= mb_hvel[9]*dt;
+          
+          mb_y[0] 		+= mb_vvel[0]*dt;
+          mb_y[1] 		+= mb_vvel[1]*dt;
+          mb_y[2] 		+= mb_vvel[2]*dt;
+          mb_y[3] 		+= mb_vvel[3]*dt;
+          mb_y[4] 		+= mb_vvel[4]*dt;
+          mb_y[5] 		+= mb_vvel[5]*dt;
+          mb_y[6] 		+= mb_vvel[6]*dt;
+          mb_y[7] 		+= mb_vvel[7]*dt;
+          mb_y[8] 		+= mb_vvel[8]*dt;
+          mb_y[9] 		+= mb_vvel[9]*dt;
+          
+          mb_vvel[0] 	+= mb_g[0]*dt;
+          mb_vvel[1] 	+= mb_g[1]*dt;
+          mb_vvel[2] 	+= mb_g[2]*dt;
+          mb_vvel[3] 	+= mb_g[3]*dt;
+          mb_vvel[4] 	+= mb_g[4]*dt;
+          mb_vvel[5] 	+= mb_g[5]*dt;
+          mb_vvel[6] 	+= mb_g[6]*dt;
+          mb_vvel[7] 	+= mb_g[7]*dt;
+          mb_vvel[8] 	+= mb_g[8]*dt;
+					mb_vvel[9] 	+= mb_g[9]*dt;
+
+          if (cb_y < 5) {
+            cannon_fired = false;
+          }
+          
+          d3.select("#cbm1")
+            .attr("cx", xpx + mb_x[0]*distance_per_pixel)
+            .attr("cy", ypx + (100-mb_y[0])*distance_per_pixel)
+            
+          d3.select("#cbm2")
+            .attr("cx", xpx + mb_x[1]*distance_per_pixel)
+            .attr("cy", ypx + (100-mb_y[1])*distance_per_pixel)
+            
+          d3.select("#cbm3")
+            .attr("cx", xpx + mb_x[2]*distance_per_pixel)
+            .attr("cy", ypx + (100-mb_y[2])*distance_per_pixel)
+
+          d3.select("#cbm4")
+            .attr("cx", xpx + mb_x[3]*distance_per_pixel)
+            .attr("cy", ypx + (100-mb_y[3])*distance_per_pixel)
+            
+          d3.select("#cbm5")
+            .attr("cx", xpx + mb_x[4]*distance_per_pixel)
+            .attr("cy", ypx + (100-mb_y[4])*distance_per_pixel)
+            
+          d3.select("#cbm6")
+            .attr("cx", xpx + mb_x[5]*distance_per_pixel)
+            .attr("cy", ypx + (100-mb_y[5])*distance_per_pixel)
+
+          d3.select("#cbm7")
+            .attr("cx", xpx + mb_x[6]*distance_per_pixel)
+            .attr("cy", ypx + (100-mb_y[6])*distance_per_pixel)
+
+          d3.select("#cbm8")
+            .attr("cx", xpx + mb_x[7]*distance_per_pixel)
+            .attr("cy", ypx + (100-mb_y[7])*distance_per_pixel)
+
+          d3.select("#cbm9")
+            .attr("cx", xpx + mb_x[8]*distance_per_pixel)
+            .attr("cy", ypx + (100-mb_y[8])*distance_per_pixel)
+
+          d3.select("#cbm10")
+            .attr("cx", xpx + mb_x[9]*distance_per_pixel)
+            .attr("cy", ypx + (100-mb_y[9])*distance_per_pixel)
+
+          d3.select("#cbm_mean")
+            .attr("cx", xpx + mb_x[9]*distance_per_pixel)
+            .attr("cy", ypx + (100-math.mean(mb_y))*distance_per_pixel)
+
+          d3.select("#cannonball_real")
+            .attr("cx", xpx + cb_x*distance_per_pixel)
+            .attr("cy", ypx + (100-cb_y)*distance_per_pixel);
+
+
+					data_mbr1.push([
+          	xpx + mb_x[0]*distance_per_pixel,
+            ypx + (100-mb_y[0])*distance_per_pixel
+          ])
+          
+					data_mbr2.push([
+          	xpx + mb_x[1]*distance_per_pixel,
+            ypx + (100-mb_y[1])*distance_per_pixel
+          ])
+          
+					data_mbr3.push([
+          	xpx + mb_x[2]*distance_per_pixel,
+            ypx + (100-mb_y[2])*distance_per_pixel
+          ])
+          
+					data_mbr4.push([
+          	xpx + mb_x[3]*distance_per_pixel,
+            ypx + (100-mb_y[3])*distance_per_pixel
+          ])
+          
+					data_mbr5.push([
+          	xpx + mb_x[4]*distance_per_pixel,
+            ypx + (100-mb_y[4])*distance_per_pixel
+          ])
+          
+					data_mbr6.push([
+          	xpx + mb_x[5]*distance_per_pixel,
+            ypx + (100-mb_y[5])*distance_per_pixel
+          ])
+          
+					data_mbr7.push([
+          	xpx + mb_x[6]*distance_per_pixel,
+            ypx + (100-mb_y[6])*distance_per_pixel
+          ])
+          
+					data_mbr8.push([
+          	xpx + mb_x[7]*distance_per_pixel,
+            ypx + (100-mb_y[7])*distance_per_pixel
+          ])
+          
+					data_mbr9.push([
+          	xpx + mb_x[8]*distance_per_pixel,
+            ypx + (100-mb_y[8])*distance_per_pixel
+          ])
+          
+					data_mbr10.push([
+          	xpx + mb_x[9]*distance_per_pixel,
+            ypx + (100-mb_y[9])*distance_per_pixel
+          ])
+          
+          data_mbr_mean.push([
+          	xpx + mb_x[0]*distance_per_pixel,
+            ypx + (100-math.mean(mb_y))*distance_per_pixel
+          ])
+          
+
+          // Assimilate an observation
+          if (dt_counter == resample_frequency ) {
+          
+          	// Reset counter
+            dt_counter = 0
+          
+          	// Create an observation
+            obs 		= cb_y + Gaussian_sample(0,obs_sd);
+            
+            svg.append("circle")
+              .attr("r", 7.5*height/450)
+              .attr("cx", xpx + cb_x*distance_per_pixel)
+              .attr("cy", ypx + (100-obs)*distance_per_pixel)
+              .attr("fill", "#FF5000")
+              .attr("stroke", "#FF5000")
+              .attr("stroke-width", 2.5*height/450)
+              .attr("class","observation");
+              
+            // Compute the Kalman Gain
+            
+            var ensemble = [];
+            
+            for (let n = 0; n < 10; n++) {
+            	ensemble.push([mb_y[n], mb_vvel[n]])
+            }
+            var ensemble_mean = math.mean(ensemble, 0);
+            var ensemble_residual = []
+            for (let n = 0; n < 10; n++) {
+            	ensemble_residual.push(math.subtract(ensemble[n],ensemble_mean))
+            }
+            var ensemble_cov = math.multiply(
+            	1/(10-1),
+              math.multiply(
+              	math.transpose(ensemble_residual),
+                ensemble_residual))
+            
+            //console.log(ensemble_cov)
+            
+            var K = math.multiply(
+            	math.multiply(
+              	ensemble_cov,
+                math.transpose(H)),
+              math.inv(
+              	math.add(
+                	math.multiply(
+                  	math.multiply(
+                    	H,
+                      ensemble_cov),
+                    math.transpose(H)
+                    ),
+                  math.sqrt(obs_sd)
+                  )
+                )
+              )
+            
+            console.log(K)
+            
+            // Apply the update
+            var new_ensemble = [];
+            for (let n = 0; n < 10; n++) {
+            	new_ensemble.push(
+              	math.flatten(
+                  math.subtract(
+                    math.reshape(
+                      ensemble[n],
+                      [ensemble[n].length,1]
+                    ),
+                    math.multiply(
+                      K,
+                      [[math.subtract(
+                        math.add(
+                          ensemble[n][0],
+                          Gaussian_sample(0,obs_sd)
+                        ),
+                      obs
+                      )]]
+                    )
+                  )
+                )
+              )
+            }
+
+						/*
+						// Assign the new variables
+            for (let n = 0; n < 10; n++) {
+            	mb_y[n] = new_ensemble[n][0];
+            	mb_vvel[n] = new_ensemble[n][1];
+              
+              // Draw the line with the arrowhead
+            }
+           */ 
+            
+            svg.append("line")
+              .attr("x1", xpx + (cb_x - 1)*distance_per_pixel)
+              .attr("y1", ypx + (100-math.mean(mb_y))*distance_per_pixel)
+              .attr("x2", xpx + (cb_x - 1)*distance_per_pixel)
+              .attr("y2", ypx + (100-math.mean(mb_y) - math.mean(mb_g)*2)*distance_per_pixel)
+              .attr("stroke", "#0485d1")
+              .attr("stroke-width", height/100)
+              .attr("class","observation")
+              .attr("marker-end", "url(#scalable-arrowhead-ensemble)"); // Attach the arrowhead
+
+            svg.append("line")
+              .attr("x1", xpx + (cb_x + 1)*distance_per_pixel)
+              .attr("y1", ypx + (100-math.mean(mb_y))*distance_per_pixel)
+              .attr("x2", xpx + (cb_x + 1)*distance_per_pixel)
+              .attr("y2", ypx + (100-math.mean(mb_y) - g*2)*distance_per_pixel)
+              .attr("stroke", "black")
+              .attr("stroke-width", height/100)
+              .attr("class","observation")
+              .attr("marker-end", "url(#scalable-arrowhead)"); // Attach the arrowhead
+            /*
+            
+            // Calculate weights
+            weights 	= [
+            	math.exp(-math.pow((obs-mb_y[0]),2)/(2*math.pow(obs_sd,2))),
+              math.exp(-math.pow((obs-mb_y[1]),2)/(2*math.pow(obs_sd,2))),
+              math.exp(-math.pow((obs-mb_y[2]),2)/(2*math.pow(obs_sd,2))),
+              math.exp(-math.pow((obs-mb_y[3]),2)/(2*math.pow(obs_sd,2))),
+              math.exp(-math.pow((obs-mb_y[4]),2)/(2*math.pow(obs_sd,2))),
+              math.exp(-math.pow((obs-mb_y[5]),2)/(2*math.pow(obs_sd,2))),
+              math.exp(-math.pow((obs-mb_y[6]),2)/(2*math.pow(obs_sd,2))),
+              math.exp(-math.pow((obs-mb_y[7]),2)/(2*math.pow(obs_sd,2))),
+              math.exp(-math.pow((obs-mb_y[8]),2)/(2*math.pow(obs_sd,2))),
+              math.exp(-math.pow((obs-mb_y[9]),2)/(2*math.pow(obs_sd,2)))]
+              
+            //// Normalize weights
+            //normalizer 			= math.sum(weights)
+            //weights 				= math.dotDivide(weights,normalizer)
+
+						// Create a cumulative sum of normalized weights
+            cumulativeSum 	= (sum => value => sum += value)(0);
+            weights_cumsum 	= weights.map(cumulativeSum);
+            weights_cumsum 	= math.dotDivide(weights_cumsum,weights_cumsum[weights_cumsum.length-1])
+
+						// Resampled indices
+            indices = [
+           		weights_cumsum.findIndex(function(number) {return number > math.random()}),
+            	weights_cumsum.findIndex(function(number) {return number > math.random()}),
+            	weights_cumsum.findIndex(function(number) {return number > math.random()}),
+            	weights_cumsum.findIndex(function(number) {return number > math.random()}),
+            	weights_cumsum.findIndex(function(number) {return number > math.random()}),
+              weights_cumsum.findIndex(function(number) {return number > math.random()}),
+              weights_cumsum.findIndex(function(number) {return number > math.random()}),
+              weights_cumsum.findIndex(function(number) {return number > math.random()}),
+              weights_cumsum.findIndex(function(number) {return number > math.random()}),
+              weights_cumsum.findIndex(function(number) {return number > math.random()})]
+              
+            // Set variables to resampled indices
+            mb_y[0] 			= mb_y[indices[0]];
+            mb_y[1] 			= mb_y[indices[1]];
+            mb_y[2] 			= mb_y[indices[2]];
+            mb_y[3] 			= mb_y[indices[3]];
+            mb_y[4] 			= mb_y[indices[4]];
+            mb_y[5] 			= mb_y[indices[5]];
+            mb_y[6] 			= mb_y[indices[6]];
+            mb_y[7] 			= mb_y[indices[7]];
+            mb_y[8] 			= mb_y[indices[8]];
+            mb_y[9] 			= mb_y[indices[9]];
+            
+            mb_vvel[0] 		= mb_vvel[indices[0]];
+            mb_vvel[1] 		= mb_vvel[indices[1]];
+            mb_vvel[2] 		= mb_vvel[indices[2]];
+            mb_vvel[3] 		= mb_vvel[indices[3]];
+            mb_vvel[4] 		= mb_vvel[indices[4]];
+            mb_vvel[5] 		= mb_vvel[indices[5]];
+            mb_vvel[6] 		= mb_vvel[indices[6]];
+            mb_vvel[7] 		= mb_vvel[indices[7]];
+            mb_vvel[8] 		= mb_vvel[indices[8]];
+            mb_vvel[9] 		= mb_vvel[indices[9]];
+            
+            mb_g[0] 			= mb_g[indices[0]];
+            mb_g[1] 			= mb_g[indices[1]];
+            mb_g[2] 			= mb_g[indices[2]];
+            mb_g[3] 			= mb_g[indices[3]];
+            mb_g[4] 			= mb_g[indices[4]];
+            mb_g[5] 			= mb_g[indices[5]];
+            mb_g[6] 			= mb_g[indices[6]];
+            mb_g[7] 			= mb_g[indices[7]];
+            mb_g[8] 			= mb_g[indices[8]];
+            mb_g[9] 			= mb_g[indices[9]];
+            
+            */
+            
+            // Mutate parameter
+            mb_g[0] 			+= Gaussian_sample(0,g_sd);
+            mb_g[1] 			+= Gaussian_sample(0,g_sd);
+            mb_g[2] 			+= Gaussian_sample(0,g_sd);
+            mb_g[3] 			+= Gaussian_sample(0,g_sd);
+            mb_g[4] 			+= Gaussian_sample(0,g_sd);
+            mb_g[5] 			+= Gaussian_sample(0,g_sd);
+            mb_g[6] 			+= Gaussian_sample(0,g_sd);
+            mb_g[7] 			+= Gaussian_sample(0,g_sd);
+            mb_g[8] 			+= Gaussian_sample(0,g_sd);
+            mb_g[9] 			+= Gaussian_sample(0,g_sd);
+            
+            // Remove the previous state uncertainty noise
+            mb_vvel[0] 		-= noise_vvel[0];
+            mb_vvel[1] 		-= noise_vvel[1];
+            mb_vvel[2] 		-= noise_vvel[2];
+            mb_vvel[3] 		-= noise_vvel[3];
+            mb_vvel[4] 		-= noise_vvel[4];
+            mb_vvel[5] 		-= noise_vvel[5];
+            mb_vvel[6] 		-= noise_vvel[6];
+            mb_vvel[7] 		-= noise_vvel[7];
+            mb_vvel[8] 		-= noise_vvel[8];
+            mb_vvel[9] 		-= noise_vvel[9];
+            
+						// Draw new Gaussian noise, represented as vertical velocity
+            noise_vvel[0] = Gaussian_sample(0,mod_sd);
+            noise_vvel[1] = Gaussian_sample(0,mod_sd);
+            noise_vvel[2] = Gaussian_sample(0,mod_sd);
+            noise_vvel[3] = Gaussian_sample(0,mod_sd);
+            noise_vvel[4] = Gaussian_sample(0,mod_sd);
+            noise_vvel[5] = Gaussian_sample(0,mod_sd);
+            noise_vvel[6] = Gaussian_sample(0,mod_sd);
+            noise_vvel[7] = Gaussian_sample(0,mod_sd);
+            noise_vvel[8] = Gaussian_sample(0,mod_sd);
+            noise_vvel[9] = Gaussian_sample(0,mod_sd);
+            
+            // Add the noise
+            mb_vvel[0] 		+= noise_vvel[0];
+            mb_vvel[1] 		+= noise_vvel[1];
+            mb_vvel[2] 		+= noise_vvel[2];
+            mb_vvel[3] 		+= noise_vvel[3];
+            mb_vvel[4] 		+= noise_vvel[4];
+            mb_vvel[5] 		+= noise_vvel[5];
+            mb_vvel[6] 		+= noise_vvel[6];
+            mb_vvel[7] 		+= noise_vvel[7];
+            mb_vvel[8] 		+= noise_vvel[8];
+            mb_vvel[9] 		+= noise_vvel[9];
+            
+            data_mbr1.push([math.nan,math.nan]);
+            data_mbr2.push([math.nan,math.nan]);
+            data_mbr3.push([math.nan,math.nan]);
+            data_mbr4.push([math.nan,math.nan]);
+            data_mbr5.push([math.nan,math.nan]);
+            data_mbr6.push([math.nan,math.nan]);
+            data_mbr7.push([math.nan,math.nan]);
+            data_mbr8.push([math.nan,math.nan]);
+            data_mbr9.push([math.nan,math.nan]);
+            data_mbr10.push([math.nan,math.nan]);
+            
+            
+            data_mbr1.push([
+              xpx + mb_x[0]*distance_per_pixel,
+              ypx + (100-mb_y[0])*distance_per_pixel
+            ])
+            data_mbr2.push([
+              xpx + mb_x[1]*distance_per_pixel,
+              ypx + (100-mb_y[1])*distance_per_pixel
+            ])
+            data_mbr3.push([
+              xpx + mb_x[2]*distance_per_pixel,
+              ypx + (100-mb_y[2])*distance_per_pixel
+            ])
+            data_mbr4.push([
+              xpx + mb_x[3]*distance_per_pixel,
+              ypx + (100-mb_y[3])*distance_per_pixel
+            ])
+            data_mbr5.push([
+              xpx + mb_x[4]*distance_per_pixel,
+              ypx + (100-mb_y[4])*distance_per_pixel
+            ])
+            data_mbr6.push([
+              xpx + mb_x[5]*distance_per_pixel,
+              ypx + (100-mb_y[5])*distance_per_pixel
+            ])
+            data_mbr7.push([
+              xpx + mb_x[6]*distance_per_pixel,
+              ypx + (100-mb_y[6])*distance_per_pixel
+            ])
+            data_mbr8.push([
+              xpx + mb_x[7]*distance_per_pixel,
+              ypx + (100-mb_y[7])*distance_per_pixel
+            ])
+            data_mbr9.push([
+              xpx + mb_x[8]*distance_per_pixel,
+              ypx + (100-mb_y[8])*distance_per_pixel
+            ])
+            data_mbr10.push([
+              xpx + mb_x[9]*distance_per_pixel,
+              ypx + (100-mb_y[9])*distance_per_pixel
+            ])
+            
+            
+            data_mbr_mean.push([math.nan,math.nan]);
+            
+          }
+          
+          
+
+          pathString_mbr1 = lineGenerator(data_mbr1);
+          d3.select("#track_model1")
+          	.attr("d", pathString_mbr1)
+            
+          pathString_mbr2 = lineGenerator(data_mbr2);
+          d3.select("#track_model2")
+          	.attr("d", pathString_mbr2)
+            
+          pathString_mbr3 = lineGenerator(data_mbr3);
+          d3.select("#track_model3")
+          	.attr("d", pathString_mbr3)
+            
+          pathString_mbr4 = lineGenerator(data_mbr4);
+          d3.select("#track_model4")
+          	.attr("d", pathString_mbr4)
+            
+          pathString_mbr5 = lineGenerator(data_mbr5);
+          d3.select("#track_model5")
+          	.attr("d", pathString_mbr5)
+            
+          pathString_mbr6 = lineGenerator(data_mbr6);
+          d3.select("#track_model6")
+          	.attr("d", pathString_mbr6)
+            
+          pathString_mbr7 = lineGenerator(data_mbr7);
+          d3.select("#track_model7")
+          	.attr("d", pathString_mbr7)
+            
+          pathString_mbr8 = lineGenerator(data_mbr8);
+          d3.select("#track_model8")
+          	.attr("d", pathString_mbr8)
+            
+          pathString_mbr9 = lineGenerator(data_mbr9);
+          d3.select("#track_model9")
+          	.attr("d", pathString_mbr9)
+            
+          pathString_mbr10 = lineGenerator(data_mbr10);
+          d3.select("#track_model10")
+          	.attr("d", pathString_mbr10)
+            
+          pathString_mbr_mean = lineGenerator(data_mbr_mean);
+          d3.select("#track_mbr_mean")
+          	.attr("d", pathString_mbr_mean)
+
+					data_cbr.push([
+          	xpx + cb_x*distance_per_pixel,
+            ypx + (100-cb_y)*distance_per_pixel
+          ])
+
+          pathString_cbr = lineGenerator(data_cbr);
+
+          d3.select("#track_real")
+          	.attr("d", pathString_cbr)
+            
+					cbm1.raise()
+          cbm2.raise()
+          cbm3.raise()
+          cbm4.raise()
+          cbm5.raise()
+					cbm6.raise()
+          cbm7.raise()
+          cbm8.raise()
+          cbm9.raise()
+          cbm10.raise()
+          cbm_mean.raise()
+          line_cbr.raise()
+					cannonball_real.raise()
+          cannon.raise()
+          
+					}
+          
+
+
+        } 
+
+        lastTime = now
+      }
+          
+
+
+
+      function clickdetector() {
+
+        //click = [event.x,event.y];
+        
+        // Delete the observation markers
+        svg.selectAll(".observation")
+        	.remove()
+        
+        // Reset the cannons
+       	cb_x 			= 0; 		// Horizontal distance to cannon
+        cb_y 			= 100; 	// Position relative to ground
+       	cb_hvel 	= 80; 		// Horizontal velocity
+       	cb_vvel 	= 0; 		// Vertical velocity
+        
+       	mb_x[0] 		= 0; 		// Horizontal distance to cannon
+        mb_y[0] 		= 100; 	// Position relative to ground
+       	mb_hvel[0] 	= 80; 		// Horizontal velocity
+       	mb_vvel[0] 	= Gaussian_sample(0,mod_sd); 		// Vertical velocity
+        mb_g[0] 		= Gaussian_sample(pri_g_mn,pri_g_sd);
+        
+       	mb_x[1] 		= 0; 		// Horizontal distance to cannon
+        mb_y[1] 		= 100; 	// Position relative to ground
+       	mb_hvel[1] 	= 80; 		// Horizontal velocity
+       	mb_vvel[1] 	= Gaussian_sample(0,mod_sd); 		// Vertical velocity
+        mb_g[1] 		= Gaussian_sample(pri_g_mn,pri_g_sd);
+        
+       	mb_x[2] 		= 0; 		// Horizontal distance to cannon
+        mb_y[2] 		= 100; 	// Position relative to ground
+       	mb_hvel[2] 	= 80; 		// Horizontal velocity
+       	mb_vvel[2] 	= Gaussian_sample(0,mod_sd); 		// Vertical velocity
+        mb_g[2] 		= Gaussian_sample(pri_g_mn,pri_g_sd);
+        
+       	mb_x[3] 		= 0; 		// Horizontal distance to cannon
+        mb_y[3] 		= 100; 	// Position relative to ground
+       	mb_hvel[3] 	= 80; 		// Horizontal velocity
+       	mb_vvel[3] 	= Gaussian_sample(0,mod_sd); 		// Vertical velocity
+        mb_g[3] 		= Gaussian_sample(pri_g_mn,pri_g_sd);
+        
+       	mb_x[4] 		= 0; 		// Horizontal distance to cannon
+        mb_y[4] 		= 100; 	// Position relative to ground
+       	mb_hvel[4] 	= 80; 		// Horizontal velocity
+       	mb_vvel[4] 	= Gaussian_sample(0,mod_sd); 		// Vertical velocity
+        mb_g[4] 		= Gaussian_sample(pri_g_mn,pri_g_sd);
+        
+       	mb_x[5] 		= 0; 		// Horizontal distance to cannon
+        mb_y[5] 		= 100; 	// Position relative to ground
+       	mb_hvel[5] 	= 80; 		// Horizontal velocity
+       	mb_vvel[5] 	= Gaussian_sample(0,mod_sd); 		// Vertical velocity
+        mb_g[5] 		= Gaussian_sample(pri_g_mn,pri_g_sd);
+        
+       	mb_x[6] 		= 0; 		// Horizontal distance to cannon
+        mb_y[6] 		= 100; 	// Position relative to ground
+       	mb_hvel[6] 	= 80; 		// Horizontal velocity
+       	mb_vvel[6] 	= Gaussian_sample(0,mod_sd); 		// Vertical velocity
+        mb_g[6] 		= Gaussian_sample(pri_g_mn,pri_g_sd);
+        
+       	mb_x[7] 		= 0; 		// Horizontal distance to cannon
+        mb_y[7] 		= 100; 	// Position relative to ground
+       	mb_hvel[7] 	= 80; 		// Horizontal velocity
+       	mb_vvel[7] 	= Gaussian_sample(0,mod_sd); 		// Vertical velocity
+        mb_g[7] 		= Gaussian_sample(pri_g_mn,pri_g_sd);
+
+       	mb_x[8] 		= 0; 		// Horizontal distance to cannon
+        mb_y[8] 		= 100; 	// Position relative to ground
+       	mb_hvel[8] 	= 80; 		// Horizontal velocity
+       	mb_vvel[8] 	= Gaussian_sample(0,mod_sd); 		// Vertical velocity
+        mb_g[8] 		= Gaussian_sample(pri_g_mn,pri_g_sd);
+        
+       	mb_x[9] 		= 0; 		// Horizontal distance to cannon
+        mb_y[9] 		= 100; 	// Position relative to ground
+       	mb_hvel[9] 	= 80; 		// Horizontal velocity
+       	mb_vvel[9] 	= Gaussian_sample(0,mod_sd); 		// Vertical velocity
+        mb_g[9] 		= Gaussian_sample(pri_g_mn,pri_g_sd);
+        
+        noise_vvel 	= [0,0,0,0,0,0,0,0,0,0];
+        
+       	t 					= 0; 		// Initial time
+        
+        cannon_fired = true;
+
+        data_cbr = [[0.05*width, 0.25*height]];
+        
+        data_mbr1 = [[0.05*width, 0.25*height]];
+        data_mbr2 = [[0.05*width, 0.25*height]];
+        data_mbr3 = [[0.05*width, 0.25*height]];
+        data_mbr4 = [[0.05*width, 0.25*height]];
+        data_mbr5 = [[0.05*width, 0.25*height]];
+        data_mbr6 = [[0.05*width, 0.25*height]];
+        data_mbr7 = [[0.05*width, 0.25*height]];
+        data_mbr8 = [[0.05*width, 0.25*height]];
+        data_mbr9 = [[0.05*width, 0.25*height]];
+        data_mbr10 = [[0.05*width, 0.25*height]];
+        
+        data_mbr_mean = [[0.05*width, 0.25*height]];
+        
+        
+        //data_mbr1.push([math.nan,math.nan]);
+        //data_mbr2.push([math.nan,math.nan]);
+        //data_mbr3.push([math.nan,math.nan]);
+        //data_mbr4.push([math.nan,math.nan]);
+        //data_mbr5.push([math.nan,math.nan]);
+        
+      }
+      
+		//clickdetector()
+  
+  
+  
+    //d3.xml('https://upload.wikimedia.org/wikipedia/commons/f/f7/Bananas.svg')
+    //    .then(data => {
+    //        document.body.append(data.documentElement)
+    //    })
+        
+    function Gaussian_sample(mu,sd) {
+    
+      val 	= mu + sd*math.sqrt(2)*erfinv(2*math.random()-1);
+
+      return val;
+    }
+    
+    function erfinv(x){
+        var z;
+        var a  = 0.147;                                                   
+        var the_sign_of_x;
+        if(0==x) {
+            the_sign_of_x = 0;
+        } else if(x>0){
+            the_sign_of_x = 1;
+        } else {
+            the_sign_of_x = -1;
+        }
+
+        if(0 != x) {
+            var ln_1minus_x_sqrd = Math.log(1-x*x);
+            var ln_1minusxx_by_a = ln_1minus_x_sqrd / a;
+            var ln_1minusxx_by_2 = ln_1minus_x_sqrd / 2;
+            var ln_etc_by2_plus2 = ln_1minusxx_by_2 + (2/(Math.PI * a));
+            var first_sqrt = Math.sqrt((ln_etc_by2_plus2*ln_etc_by2_plus2)-ln_1minusxx_by_a);
+            var second_sqrt = Math.sqrt(first_sqrt - ln_etc_by2_plus2);
+            z = second_sqrt * the_sign_of_x;
+        } else { // x is zero
+            z = 0;
+        }
+      return z;
+    }
+    
+
+        
+    </script>
+    
+  </body>
+
+</html>
