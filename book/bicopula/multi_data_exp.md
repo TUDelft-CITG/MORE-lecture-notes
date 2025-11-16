@@ -58,10 +58,26 @@ The correlation coefficients introduced earlier provide an overall measure of th
 
 For univariate data, classical tools such as histograms are generally sufficient to examine the shape and variability of individual variables. However, in the case of dependent data, indicidual plots cannot capture the interactions between variables. A common first step is to create pairwise plots of the variables, or **scatter plots**. In these plots, what happens with each variable on its own is combined with how the variables interact, which can make it hard to see their actual dependence structure
 
-To better isolate the contribution of the dependence structure, it is often useful to **transform the data**, allowing the joint relationships to be visualized independently of the individual distributions. This provides a clearer view of the underlying dependence between the variables.
+To better isolate the contribution of the dependence structure, it is often useful to **transform the data**, allowing the joint relationships to be visualized independently of the individual distributions. This provides a clearer view of the underlying dependence between the variables. 
 
+```{figure} ..//bicopula/transformed_var.jpg
 
+---
 
+---
+Data of chemical components of wine: acf = fixed acidity, acv = volatile acidity, acc = citric acid. Row 1: individual histograms. Row 2: scatter plots of pairs of chemicals acf versus acv (left), acf versus acc (middle), acv versus acc (right). Row 3: Scatter plots of the same pairs after transforming the data using the Probability Integral Transform. Row 4: scatter plots of pairs after transforming the data into standard normal variables (normalized). Modified figure 1.4 and 1.5 from Czado C. (2019)
+```
 
+From the figure above, we can see that histograms provide an understanding of the variability of each variable but do not provide information on their relative behaviour (row 1). Scatter plots can help. However, the scale of each variable can influence our understanding of the dependence. For example, from the scatter plots in row 2, $acf$ has a range of variability from 4 to 16, which is ten times larger than the other two variables ($acc$ from 0 to 1 and $acv$ from 0 to 1.5). We see a positive relationship between $acf$ and $acc$ (both increase together) and a negative relationship between $acf$ and $acv$, and between $acv$ and $acc$ (one increases while the other decreases, and vice versa).
+
+We get more information in row 3 (which is also the copula space, as we will see later). We see that $acf$ and $acv$ (left) have very little association (dots scattered randomly); $acf$ and $acc$ (middle) show clear association in the upper-right corner, meaning that high values are more strongly associated than lower values; $acv$ and $acc$ (right) show negative dependence. In row 4, the scatter plots with normalized data further highlight the dependence structure of the data.
+
+The scatterplots in rows 3 and 4 were produced using transformed versions of the data to better highlight their dependence structure. We now formalize these transformations, which form the basis for modelling dependence with copula functions, as we see in the next sections. To do so, we define the following scales:
+
+**Original Scale.** Two random variables $X$ and $Y$ with probability density functions (pdf) $f_X(x)$ and $f_Y(y)$ and cumulative distribution functions (cdf) $F_X(x)$ and $F_Y(y)$. They can take any observed values in their own units, e.g., precipitation and discharge; traffic load and stress.
+
+**Copula Scale.** The two variables are transformed via their cdfs (either empirical or theoretical), such that $u_1 = F_X(x)$ and $u_2 = F_Y(y)$. Following the probability integral transform, $u_1$ and $u_2$ are uniformly distributed between 0 and 1.
+
+**Normalized Scale.** The two variables are transformed again via $\Phi$, the standard normal distribution. Hence, $z_1 = \Phi^{-1}(u_1) = \Phi^{-1}(F_X(x))$ and $z_2 = \Phi^{-1}(u_2) = \Phi^{-1}(F_Y(y))$. $\Phi$ is the cdf of a standard normal distribution.
 
 
