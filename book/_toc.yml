@@ -40,6 +40,10 @@ parts:
         sections:
           - file: vines/Definition.md
             title: Regular vines
+          - file: vines/def_vine_cop.md
+            title: Vine copulas
+          - file: vines/estimation.md
+            title: Estimation
       - file: data_assimilation/01_introduction.md
         title: Data Assimilation
         sections:
