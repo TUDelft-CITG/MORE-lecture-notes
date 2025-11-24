@@ -6,8 +6,6 @@ In this chapter, you will study Cooke's method[^1], also called the Classical me
 
 Some examples of application of the Classical method are the assessment of reservoir performance[^3], the reconstruction of historical records of water levels in a river[^4] or the estimation of the probabilities of failure of dikes for the Dutch part of the Rhine River[^5]. 
 
- is applied here to elicit and combine experts' opinions based on empirical control.  In Cooke's method, each expert provides uncertainty estimates for each question through some percentiles, typically 5\%, 50\% and 95\%. The expert provides those estimates for two types of questions: (1) calibration or seed questions, and (2) questions of interest. Calibration questions are those for which data exists and are, thus, used by the analysts to calibrate the experts. The questions of interests are those that actually want to be elicited.
-
 [^1]: Cooke, R. (1991). Experts in uncertainty: Opinion and subjective probability in science. Oxford University
 Press.
 [^2]: Cooke, R. M. and Goossens, L. L. H. J. (2008). TU Delft expert judgment data base. Reliability Engineering
