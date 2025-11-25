@@ -8,6 +8,7 @@ Given that 3 quantiles are elicited, the realizations of the calibration questio
 ---
 
 ---
+P-vector
 ```
 
 This probability vector can be compared with the sample distribution of the expert's inter-quantile intervals $s(e)$ computed as
