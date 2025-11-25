@@ -2,6 +2,14 @@
 
 Given that 3 quantiles are elicited, the realizations of the calibration questions should fall on one of the 4 inter-quantile intervals with probability vector $p = (0.05, 0.45, 0.45, 0.05)$.
 
+```{figure} ./figures/P_vector.png
+:name: snippet_quest
+:width: 600px
+---
+
+---
+```
+
 This probability vector can be compared with the sample distribution of the expert's inter-quantile intervals $s(e)$ computed as
 
 $$
@@ -11,6 +19,15 @@ $$
     s_4(e) = \#\{i|95\% < x_i \ quantile\}/N  \ \ \ \ \ \ \ \ \ \  \ \ \ \nonumber \\
     s(e) = (s_1, s_2, s_3, s_4) \ \ \ \ \ \ \ \ \ \  \ \ \  \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \
 $$
+
+```{figure} ./figures/S_vector.png
+:name: snippet_quest
+:width: 600px
+---
+
+---
+Example of an empirical s(e).
+```
 
 Note that $s(e)$ is computed per expert. The calibration score of each expert $Cal(e)$ can be then computed to assess the discrepancy between $p$ and $s(e)$ as
 
