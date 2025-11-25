@@ -81,8 +81,8 @@ parts:
                title: Grand Prix 2024
       - file: SEJ/Introduction.md
         title: Structured Expert Judgment
-        # sections:
-        #   - file: SEJ/Questionnaire.md
+        sections:
+          - file: SEJ/Questionnaire.md
         #   - file: SEJ/Calibration.md
         #   - file: SEJ/Information.md
         #   - file: SEJ/Aggregation.md
