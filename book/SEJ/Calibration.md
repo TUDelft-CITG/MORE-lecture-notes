@@ -71,8 +71,6 @@ $$
 
 Therefore, expert E has a very low calibration score.
 
-
-
 ## It's your turn now!
 
 Compute the calibration score for expert A. Which expert is more calibrated when comparing expert A and E? Note that the realization in the top right panel falls in the third interquantile range.
@@ -102,7 +100,6 @@ $$
 Cal(A) = 0.73 >> Cal(E)=0.00027. Therefore, expert A is much more accurate than expert E.
 
 Note that with 8 calibration question is impossible to get a vector $s$ that perfectly matches the vector $p$.
-
 ```
 
 .
