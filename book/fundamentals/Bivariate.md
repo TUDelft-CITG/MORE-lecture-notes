@@ -8,7 +8,7 @@ One of the simplest approaches to define a multivariate distribution, $F(x_{1}, 
 The bivariate Gaussian distribution for two random variables $X_1$ and $X_2$ is defined as
 
 $$
-\phi_{\rho}(x_1, x_2) = \frac{1}{2\pi \sigma_1 \sigma_2 \sqrt{1-\rho^2}} \exp \left( - \frac{\left( \frac{x_1-\mu_1}{\sigma_1}\right)^2 -\left( \frac{2\rho (x_1-\mu_1)(x_2-\mu_2)}{\sigma_1 \sigma_2}\right) +\left(\frac{x_2-\mu_2}{\sigma_2} \right)^2}{2(1-\rho^2)}\right)
+\phi_{\rho}(x_1, x_2) = \frac{1}{2\pi \sigma_1 \sigma_2 \sqrt{1-\rho^2}} \exp \left( - \frac{\left( \frac{x_1-\mu_1}{\sigma_1}\right) -\left( \frac{2\rho (x_1-\mu_1)(x_2-\mu_2)}{\sigma_1 \sigma_2}\right) +\left(\frac{x_2-\mu_2}{\sigma_2} \right)}{2(1-\rho^2)}\right)
 $$
 
 where $x_1$ and $x_2$ are values of the random variables, $\sigma_1$ and $\sigma_2$ are the standard deviations of the random variables, $\rho$ is the correlation coefficient between $X_1$ and $X_2$, and $\mu_1$ and $\mu_2$ are the mean values of the random variables. Therefore, it has five parameters: $\mu_1$, $\mu_2$, $\sigma_1$, $\sigma_2$ and $\rho$.
@@ -25,7 +25,7 @@ $$
 \phi_{\rho}(x_1, x_2) = \frac{1}{\sqrt{(2\pi)^2 |\boldsymbol{\Sigma|}}} \exp{\left(-\frac{1}{2}(\boldsymbol{x-\mu})^T \boldsymbol{\Sigma}^{-1} (\boldsymbol{x-\mu})\right)}
 $$
 
-where $\boldsymbol{x}$ is the vector of values of the random variable, $\boldsymbol{\mu}$ is the vector of means, and $\boldsymbol{\Sigma}$ is the [covariance matrix](cov).
+where $\boldsymbol{x}$ is the vector of values of the random variable, $\boldsymbol{\mu}$ is the vector of means, and $\boldsymbol{\Sigma}$ is the covariance matrix[^note].
 
 The cumulative distribution function of the bivariate Gaussian distribution would then be defined as
 
@@ -35,8 +35,17 @@ $$
 
 Note that when talking about the Gaussian distribution instead of using $F_{X_1,X_2}(x_1,x_2)$, we use $\Phi_{X_1,X_2}(x_1,x_2)$, but it means the same!
 
+You can play with the interactive element below changing the correlation value yourself. Observe how the distribution's _density_ contours, or a scatter plot of _samples,_ change when you adjust the correlation.
+
+<br>
+
+<iframe src="../_static/elements/element_correlation.html" width="600" height="400" frameborder="0"></iframe>
+
+<br>
+
 In the figure below, you can observe the PDF and CDF of a bivariate Gaussian distribution for a correlation coefficient $\rho=0.77$ (remember the relation between correlation and covariance).
 
+<br><br>
 
 ```{figure} ../figures/gaussian_rivers_pdf_cdf.png
 
@@ -45,19 +54,7 @@ In the figure below, you can observe the PDF and CDF of a bivariate Gaussian dis
 ---
 Bivariate Gaussian distribution: (left) probability density function, and (right) cumulative distribution function.
 ```
-
-## Play with bivariate normal PDF
-
-In this small demo you can create plots of the bivariate normal PDF, including a scatter plot of generated realizations, where you can play with the values of the mean, standard deviations and correlation coefficient. Adjust the values by dragging the handles for the mean (red), standard deviations (blue and yellow), and correlation (green) in the left subplot. Observe how the distribution changes, and how each parameter affects the covariance matrix.
-
-
-````{iframe-figure} ../_static/elements/element_2D_Gaussian.html
-:name: 2D_Gaussian
-:aspectratio: 3 / 1
-
-Interactively change the means, standard deviations and correlation coefficient for the bivariate Gaussian PDF and visualize how the density contours, samples and covariance matrix change. [^ref].
-````
-
+<br>
 
 ## Conditionalizing a bivariate Gaussian distribution
 
@@ -199,8 +196,8 @@ $$
 
 $$
 \Sigma = \begin{pmatrix}
-600^2 \ \ \ 336000 \\
-336000 \ \ \ 850^2
+600 \ \ \ 336000 \\
+336000 \ \ \ 850
 \end{pmatrix}
 $$
 ```
