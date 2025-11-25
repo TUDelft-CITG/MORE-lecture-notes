@@ -10,6 +10,14 @@ parts:
           - file: fundamentals/Correlation_and_Covariance.md
           # - file: fundamentals/Copulas.ipynb
           - file: fundamentals/Bivariate.md
+          - file: vines/graph_theory.md
+      - file: mcmc/introduction.md
+        title: Monte Carlo methods and MCMC
+        sections:
+          - file: mcmc/sampling.ipynb
+            title: Monte Carlo simulation
+          - file: mcmc/mcmc.ipynb
+            title: Markov chain Monte Carlo sampling
       - file: NPBN/overview.md
         title: Non-parametric Bayesian Networks
         sections:
