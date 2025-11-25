@@ -104,3 +104,5 @@ Cal(A) = 0.73 >> Cal(E)=0.00027. Therefore, expert A is much more accurate than 
 Note that with 8 calibration question is impossible to get a vector $s$ that perfectly matches the vector $p$.
 
 ```
+
+.
