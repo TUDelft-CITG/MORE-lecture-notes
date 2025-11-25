@@ -33,6 +33,7 @@ parts:
            title: Definition
          - file: NPBN/Correls.md
            title: Correlations in NPBNs
+         - file: NPBN/Semantics.md
          - file: NPBN/NPBN_tutorial.ipynb
            title: Tutorial py-Banshee
       - file: vines/Introduction.md
