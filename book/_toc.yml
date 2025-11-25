@@ -84,8 +84,8 @@ parts:
         sections:
           - file: SEJ/Questionnaire.md
             # title: Questionnaire
-          - file: SEJ/Calibration.md
-        #   - file: SEJ/Information.md
+          # - file: SEJ/Calibration.md
+          - file: SEJ/Information.md
         #   - file: SEJ/Aggregation.md
       # - file: SEJ/Introduction.md
       #   title: Structured Expert Judgment
