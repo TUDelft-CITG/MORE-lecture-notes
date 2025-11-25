@@ -71,35 +71,4 @@ $$
 
 Therefore, expert E has a very low calibration score.
 
-## It's your turn now!
-
-Compute the calibration score for expert A. Which expert is more calibrated when comparing expert A and E? Note that the realization in the top right panel falls in the third interquantile range.
-
-
-```{admonition} Solution
-:class: tip, dropdown
-
-First, we compute the $s(A)$ by counting the number of times that the realization falls in a given interquantile range. We obtain
-
-$$
-s(A) = (1/8, 3/8, 3/8, 1/8) \approx (0.12, 0.38, 0.38, 0.12)
-$$
-
-Using $s(A)$, we can compute $I(s,p)$ as
-
-$$
-    I(s,p) = 0.12 \ln{\frac{0.12}{0.05}}+0.38 \ln{\frac{0.38}{0.45}}+0.38 \ln{\frac{0.38}{0.45}}+0.12 \ln{\frac{0.12}{0.05}} = 0.082
-$$
-
-And finally the calibration score for expert A, $Cal(A)$ as
-
-$$
-    Cal(A) = 1 - \chi^2_3(2\cdot8\cdot0.082) = 0.73   
-$$
-
-Cal(A) = 0.73 >> Cal(E)=0.00027. Therefore, expert A is much more accurate than expert E.
-
-Note that with 8 calibration question is impossible to get a vector $s$ that perfectly matches the vector $p$.
-```
-
 .
