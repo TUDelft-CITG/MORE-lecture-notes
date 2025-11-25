@@ -16,4 +16,9 @@ $$
 
 where $L^* = L - k(U-L)$ and and $U^* = U + k(U-L)$, with $L$ and $U$ being the lowest and highest value, respectively, obtained from the different experts and the realization if available and $k=0.1$. 
 
-A high score of $Inf(e)$ means that the expert distribution is concentrated in a small region.
+```{admonition} "Interpreting Information Score"
+:class: tip
+
+A high score of $Inf(e)$ means that the expert distribution is concentrated in a small region and, thus, is considered more informative.
+```
+
