@@ -77,8 +77,8 @@ parts:
          - file: data_assimilation/04_Grand_Prix.md
            title: Grand Prix
            sections:
-           - file: data_assimilation/04a_2024.md
-             title: Grand Prix 2024
+             - file: data_assimilation/04a_2024.md
+               title: Grand Prix 2024
       - file: SEJ/Introduction.md
         title: Structured Expert Judgment
         sections:
