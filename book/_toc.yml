@@ -82,10 +82,10 @@ parts:
       - file: SEJ/Introduction.md
         title: Structured Expert Judgment
         sections:
-         - file: SEJ/Questionnaire.md
-         - file: SEJ/Calibration.md
-         - file: SEJ/Information.md
-         - file: SEJ/Aggregation.md
+        - file: SEJ/Questionnaire.md
+        - file: SEJ/Calibration.md
+        - file: SEJ/Information.md
+        - file: SEJ/Aggregation.md
       - file: references.md
     # - file: changelog.md
     # - file: credits.md
