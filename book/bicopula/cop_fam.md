@@ -5,3 +5,7 @@
 ### Gaussian
 ### Gumbel
 ### Clayton
+
+# GOF
+
+# conditional distribution/probability and tail dependence
