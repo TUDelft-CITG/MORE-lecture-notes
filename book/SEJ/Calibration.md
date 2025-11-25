@@ -3,7 +3,7 @@
 Given that 3 quantiles are elicited, the realizations of the calibration questions should fall on one of the 4 inter-quantile intervals with probability vector $p = (0.05, 0.45, 0.45, 0.05)$.
 
 ```{figure} ./figures/P_vector.png
-:name: snippet_quest
+:name: p_vector
 :width: 600px
 ---
 
@@ -21,7 +21,7 @@ $$
 $$
 
 ```{figure} ./figures/S_vector.png
-:name: snippet_quest
+:name: s_vector
 :width: 600px
 ---
 
