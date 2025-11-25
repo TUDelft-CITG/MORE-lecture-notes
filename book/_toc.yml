@@ -85,12 +85,12 @@ parts:
               - file: data_assimilation/04a_2024.md
                 title: Grand Prix 2024
 
-      - file: SEJ/Introduction.md
-        title: Structured Expert Judgment
-        sections:
-          - file: SEJ/Questionnaire.md
-          - file: SEJ/Calibration.md
-          - file: SEJ/Information.md
-          - file: SEJ/Aggregation.md
+      # - file: SEJ/Introduction.md
+      #   title: Structured Expert Judgment
+      #   sections:
+      #     - file: SEJ/Questionnaire.md
+      #     - file: SEJ/Calibration.md
+      #     - file: SEJ/Information.md
+      #     - file: SEJ/Aggregation.md
 
       - file: references.md
