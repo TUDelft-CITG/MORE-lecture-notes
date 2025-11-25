@@ -12,13 +12,13 @@ Given that 3 quantiles are elicited, the realizations of the calibration questio
 
 This probability vector can be compared with the sample distribution of the expert's inter-quantile intervals $s(e)$ computed as
 
-$$
-    s_1(e) = \#\{i|x_i \leq 5\% \ quantile\}/N  \ \ \ \ \ \ \ \ \ \ \ \ \ \ \nonumber\\      
-    s_2(e) = \#\{i|5\% < x_i \leq 50\% \ quantile\}/N \nonumber \ \ \\
-    s_3(e) = \#\{i|50\% < x_i \leq 95\% \ quantile\}/N  \nonumber \\
-    s_4(e) = \#\{i|95\% < x_i \ quantile\}/N  \ \ \ \ \ \ \ \ \ \  \ \ \ \nonumber \\
-    s(e) = (s_1, s_2, s_3, s_4) \ \ \ \ \ \ \ \ \ \  \ \ \  \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \
-$$
+$
+    s_1(e) = \#\{i|x_i \leq 5\% \ quantile\}/N \\    
+    s_2(e) = \#\{i|5\% < x_i \leq 50\% \ quantile\}/N  \\
+    s_3(e) = \#\{i|50\% < x_i \leq 95\% \ quantile\}/N   \\
+    s_4(e) = \#\{i|95\% < x_i \ quantile\}/N  \\
+    s(e) = (s_1, s_2, s_3, s_4)
+$
 
 ```{figure} ./figures/S_vector.png
 :name: s_vector
