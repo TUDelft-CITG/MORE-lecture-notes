@@ -11,6 +11,7 @@ parts:
           # - file: fundamentals/Copulas.ipynb
           - file: fundamentals/Bivariate.md
           - file: vines/graph_theory.md
+
       - file: mcmc/introduction.md
         title: Monte Carlo methods and MCMC
         sections:
@@ -18,6 +19,7 @@ parts:
             title: Monte Carlo simulation
           - file: mcmc/mcmc.ipynb
             title: Markov chain Monte Carlo sampling
+
       - file: LectureNotes_NS/IntroNS.md
         title: Introduction to non-stationarity
         sections:
@@ -26,16 +28,18 @@ parts:
           - file: LectureNotes_NS/methods_NS.md
           - file: LectureNotes_NS/methods_NS_2.md
           - file: LectureNotes_NS/ReturnPeriod_NS.md
+
       - file: NPBN/overview.md
         title: Non-parametric Bayesian Networks
         sections:
-         - file: NPBN/definition.md
-           title: Definition
-         - file: NPBN/Correls.md
-           title: Correlations in NPBNs
-         - file: NPBN/Semantics.md
-         - file: NPBN/NPBN_tutorial.ipynb
-           title: Tutorial py-Banshee
+          - file: NPBN/definition.md
+            title: Definition
+          - file: NPBN/Correls.md
+            title: Correlations in NPBNs
+          - file: NPBN/Semantics.md
+          - file: NPBN/NPBN_tutorial.ipynb
+            title: Tutorial py-Banshee
+
       - file: vines/Introduction.md
         title: Vine-copulas
         sections:
@@ -45,40 +49,42 @@ parts:
             title: Vine copulas
           - file: vines/estimation.md
             title: Estimation
+
       - file: data_assimilation/01_introduction.md
         title: Data Assimilation
         sections:
-         - file: data_assimilation/02_Analytical_Filters.md
-           title: Analytical Filtering
-           sections:
-            - file: data_assimilation/02a_Gaussian_special_case.md
-            - file: data_assimilation/02b_Kalman_Filter.md
-            - file: data_assimilation/02c_Kalman_Filter_example.md
-              title: Example
-         - file: data_assimilation/03_Ensemble_Filters.md
-           title: Ensemble Filtering
-           sections:
-            - file: data_assimilation/03a_Ensemble_Kalman_Filter.md
-              title: Ensemble Kalman Filter
-              sections:
-                - file: data_assimilation/03aa_EnKF_pseudo_algorithm.md
-                - file: data_assimilation/03ab_Lemniscate_EnKF.md
-                  title: Example
-                - file: data_assimilation/03ac_state_vector_augmentation.md
-            - file: data_assimilation/03b_Particle_Filter.md
-              title: Particle Filter
-              sections:
-                - file: data_assimilation/03ba_Importance_sampling.md
-                - file: data_assimilation/03bb_resampling.md
-                - file: data_assimilation/03bc_PF_pseudo_algorithm.md
-                - file: data_assimilation/03bd_Lemniscate_PF.md
-                  title: Example
-                - file: data_assimilation/03be_curse_of_dimensionality.md
-         - file: data_assimilation/04_Grand_Prix.md
-           title: Grand Prix
-           sections:
-             - file: data_assimilation/04a_2024.md
-               title: Grand Prix 2024
+          - file: data_assimilation/02_Analytical_Filters.md
+            title: Analytical Filtering
+            sections:
+              - file: data_assimilation/02a_Gaussian_special_case.md
+              - file: data_assimilation/02b_Kalman_Filter.md
+              - file: data_assimilation/02c_Kalman_Filter_example.md
+                title: Example
+          - file: data_assimilation/03_Ensemble_Filters.md
+            title: Ensemble Filtering
+            sections:
+              - file: data_assimilation/03a_Ensemble_Kalman_Filter.md
+                title: Ensemble Kalman Filter
+                sections:
+                  - file: data_assimilation/03aa_EnKF_pseudo_algorithm.md
+                  - file: data_assimilation/03ab_Lemniscate_EnKF.md
+                    title: Example
+                  - file: data_assimilation/03ac_state_vector_augmentation.md
+              - file: data_assimilation/03b_Particle_Filter.md
+                title: Particle Filter
+                sections:
+                  - file: data_assimilation/03ba_Importance_sampling.md
+                  - file: data_assimilation/03bb_resampling.md
+                  - file: data_assimilation/03bc_PF_pseudo_algorithm.md
+                  - file: data_assimilation/03bd_Lemniscate_PF.md
+                    title: Example
+                  - file: data_assimilation/03be_curse_of_dimensionality.md
+          - file: data_assimilation/04_Grand_Prix.md
+            title: Grand Prix
+            sections:
+              - file: data_assimilation/04a_2024.md
+                title: Grand Prix 2024
+
       - file: SEJ/Introduction.md
         title: Structured Expert Judgment
         sections:
@@ -86,6 +92,5 @@ parts:
           - file: SEJ/Calibration.md
           - file: SEJ/Information.md
           - file: SEJ/Aggregation.md
+
       - file: references.md
-    # - file: changelog.md
-    # - file: credits.md
