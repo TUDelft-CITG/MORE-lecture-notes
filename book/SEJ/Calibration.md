@@ -53,10 +53,10 @@ where $n$ is the number of calibration questions. Low scores of $Cal(e)$ mean th
 
 ## Let's see it with an example
 
-Let's compute the calibration score for expert E using the 8 seed questions in {numref}`snippet_quest`.
+Let's compute the calibration score for expert E using the 8 seed questions in {numref}`snippet_quest2`.
 
 ```{figure} ./figures/questions_2.png
-:name: snippet_quest
+:name: snippet_quest2
 :width: 600px
 ---
 
