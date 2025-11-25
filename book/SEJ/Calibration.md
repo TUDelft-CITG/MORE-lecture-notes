@@ -14,10 +14,22 @@ P-vector
 This probability vector can be compared with the sample distribution of the expert's inter-quantile intervals $s(e)$ computed as
 
 $
-    s_1(e) = \#\{i|x_i \leq 5\% \ quantile\}/N \\    
+    s_1(e) = \#\{i|x_i \leq 5\% \ quantile\}/N \\   
+$
+
+$ 
     s_2(e) = \#\{i|5\% < x_i \leq 50\% \ quantile\}/N  \\
+$
+
+$
     s_3(e) = \#\{i|50\% < x_i \leq 95\% \ quantile\}/N   \\
+$
+
+$
     s_4(e) = \#\{i|95\% < x_i \ quantile\}/N  \\
+$
+
+$
     s(e) = (s_1, s_2, s_3, s_4)
 $
 
