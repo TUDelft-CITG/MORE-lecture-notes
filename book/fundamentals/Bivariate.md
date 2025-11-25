@@ -242,4 +242,3 @@ Use the multivariate Gaussian distribution implemented in Scipy.stats to plot th
 :::
 
 [^ref]: Figure by Max Ramgraber, {ref}`find out more here <multivariate_credit>`.
-:::
