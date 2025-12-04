@@ -100,6 +100,3 @@ CDF (top row) and PDF (bottom row) isolines for the Clayton copula are shown for
 
 ```
 ## Copula Sandbox
-
-
-# conditional distribution/probability and tail dependence
