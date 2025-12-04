@@ -1,4 +1,4 @@
-## An example: Tracking the height of a satellite in orbit around earth
+## An example: Lemniscate model
 
 ````{iframe-figure} ../_static/elements/element_lemniscate_KF.html
 :name: element_lemniscate_KF
