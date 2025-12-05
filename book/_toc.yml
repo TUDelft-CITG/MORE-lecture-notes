@@ -54,7 +54,9 @@ parts:
             - file: data_assimilation/02a_Gaussian_special_case.md
             - file: data_assimilation/02b_Kalman_Filter.md
             - file: data_assimilation/02c_Kalman_Filter_example.md
-              title: Example
+              title: Example Lemniscate
+            - file: data_assimilation/02d_Kalman_Filter_example.md
+              title: Example Satellite
          - file: data_assimilation/03_Ensemble_Filters.md
            title: Ensemble Filtering
            sections:

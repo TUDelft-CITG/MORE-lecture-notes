@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta name="description" content="A very bad cannon model">
+    <title>A very bad cannon model</title>
+    <script src="https://unpkg.com/mathjs/lib/browser/math.js"></script>
+    
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://d3js.org/d3-ease.v2.min.js"></script>
+    <script src="https://unpkg.com/d3-simple-slider"></script>
+    
+    <style>
+        #my_dataviz { position: relative; } 
+        #myCheckbox { position: absolute; top: 0; left: 0; }
+        
+        body{
+          margin: 0; overflow: hidden;
+          font-family: Helvetica, sans-serif;
+        }
+        .my_datavizdiv {
+            position: absolute;
+        }
+        svg {
+          position: absolute;
+          top: 0;
+          left: 0;
+          background-color: None
+        }    
+        #myDropdown { 
+          position: absolute; 
+          top: 0; 
+          left: 0; 
+          font-family: Helvetica, sans-serif;
+        }
+    </style>
+    
+  </head>
+
+<!-- Create a div where the graph will take place -->
+<div id="my_dataviz">
+  <svg id="click" xmlns="http://www.w3.org/2000/svg" style="background-color:#ffffff">
+      <defs>
+          <g id="pointer" transform="scale(0.5)">
+              <circle cx="0" cy="0" r="20" id="dragcircle" />
+          </g>
+      </defs>
+      
+  </svg>
+
+  <!-- The dropdown select element -->
+  <select id="myDropdown" >
+    <!-- Three options for the dropdown -->
+    <option value="true">True Model</option>
+    <option value="extrapolate">Extrapolation</option>
+    <option value="nomodel">Do Nothing</option>
+  </select>
+</div>
+
+
+
+  <body style='overflow:hidden'>
+  
+    <script>
+    
+    
+    
+      const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
+      const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
+      
+      var height 	= math.min([vw,vh]); // 450
+      var width 	= math.min([vw,vh]);
+      
+      const aspect 	= 1.8;
+      
+      if (vw/aspect < vh) {
+      	// Viewport width is limiting
+        var width 	= vw;
+        var height 	= vw/aspect;
+      } else {
+      	// Viewport height is limiting
+      	var width 	= vh*aspect;
+        var heigt 	= vh;
+      }
+      
+
+      var xrange 			= [-10,30];
+      var yrange 			= [-10,10];
+
+      var x_limits 		= [-10,30];
+      var y_limits 		= [-10,10];
+      
+      window_x 	= [0,width];
+      window_y 	= [0,height*0.9];
+      
+      // Get scaling functions for the x scale and the y_scale
+      const xScale = d3.scaleLinear()
+        .domain([x_limits[0],x_limits[1]])
+        .range(window_x)
+      const xScale_inverse = d3.scaleLinear()
+        .domain(window_x)
+        .range([x_limits[0],x_limits[1]])
+      const yScale = d3.scaleLinear()
+        .domain([y_limits[0],y_limits[1]])
+        .range([window_y[1],window_y[0]])
+         
+      const scale_X = (window_x[1] - window_x[0])/(xrange[1] - xrange[0]);
+      const scale_Y = (window_y[1] - window_y[0])/(yrange[1] - yrange[0]);
+      
+      
+
+
+			const cutoff = 150;
+      
+      const loglength = 300;
+      
+      const color_mean 	= "#0485d1"; // 1e488f
+      const color_std 	= "#0485d1";
+      const color_true 	= "#1e488f";
+
+			// Parameters for the lemniscate
+      const a = 10; // Scale factor for the size of the infinity symbol
+      const centerX = 0;
+      const centerY = 0.25;
+      const angle = - Math.PI / 4; // 45 degrees in radians
+      
+      
+      var subwindow_x 	= [width*0.565,width*0.95];
+      var subwindow_y 	= [height*0.05,height*0.3];
+      
+      var subx_limits 		= [0,loglength];
+      var suby_limits 		= [-15,5]; //[0,2];
+      
+      // Get scaling functions for the x scale and the y_scale
+      const subxScale = d3.scaleLinear()
+        .domain([subx_limits[0],subx_limits[1]])
+        .range(subwindow_x)
+      const subxScale_inverse = d3.scaleLinear()
+        .domain(subwindow_x)
+        .range([subx_limits[0],subx_limits[1]])
+      const subyScale = d3.scaleLinear()
+        .domain([suby_limits[0],suby_limits[1]])
+        .range([subwindow_y[1],subwindow_y[0]])
+
+      
+      
+      const dim 		= 200;
+      const halfdim = 100;
+      
+      
+      var g 				= -9.81 // Gravitational acceleration constant
+      var t 				= 0; 		// Initial time
+      var dt 			= 0.03; 	// Time step length
+      
+      const mod_sd_true = 0.15;
+      const obs_sd_true = 0.5;
+      var mod_sd 	= 0.25;
+      var obs_sd 	= 0.5;
+      
+      var Q = [[math.pow(mod_sd,2), 0],[0, math.pow(mod_sd,2)]];
+      var R = [[math.pow(obs_sd,2), 0],[0, math.pow(obs_sd,2)]];
+      
+      var resample_frequency = 10;
+      
+      var delay   = 100;
+      
+      const fadeout = 2500;
+      
+      
+      
+
+      
+      // Start point in pixels
+      var xpx 			= 0.05*width;
+      var ypx 			= 0.2*height;
+      
+      // Define the Kalman prior
+      var mu 			= [[0],[100]];
+      const prior_sd = 1;
+      var sd			= prior_sd;
+      
+      // Define the prior mean
+      var prior_mean = [0,0];
+      var prior_cov = [[math.pow(prior_sd,2),0],[0,math.pow(prior_sd,2)]];
+     
+      // Define the (imperfect) linear model
+      var A = [[1,0],[0,1]];
+     
+      var rotspd 	= 1;
+      var rad 		= 0;
+			var vec 		= [0,1];
+      
+      // Get the true position
+      const trudist 	= 6;
+      var trupos 	= [0,trudist];
+      
+      // Define the mean and standard deviation
+      var mu 			= trudist;
+      var sd 			= prior_sd;
+      
+      var speed 	= 0.5;
+      
+      var svg = d3.select("#click") // This selects the div
+          .attr("width", width) // This defines the canvas' width
+          .attr("height", height) // This defines the canvas' height
+         
+      // Create legend
+      svg.append("circle")
+        .attr("r", 10*height/450/2)
+        .attr("cx", width*0.025)
+        .attr("cy", height*0.95)
+        .attr("fill", "#333333")
+        .attr("stroke", "#333333")
+        .attr("stroke-width", 2.5*height/450)
+        .attr("opacity", 1.);
+      svg.append("text")             
+          .attr("transform",
+                "translate("+(width*0.04).toString()+","+(height*0.96).toString()+")")
+          .style("text-anchor", "left")
+          .text("truth")
+          .style("font-family", "arial")
+          .style("font-size", (12*width/600).toString()+"px")
+         
+      svg.append("circle")
+        .attr("r", 5*height/450)
+        .attr("cx", width*0.15)
+        .attr("cy", height*0.95)
+        .attr("fill", "#FF5000");
+      svg.append("text")             
+          .attr("transform",
+                "translate("+(width*0.165).toString()+","+(height*0.96).toString()+")")
+          .style("text-anchor", "left")
+          .text("observation")
+          .style("font-family", "arial")
+          .style("font-size", (12*width/600).toString()+"px")
+         
+      svg.append("circle")
+        .attr("r", 20*height/450)
+        .attr("cx", width*0.35)
+        .attr("cy", height*0.95)
+        .attr("fill", color_std)
+        .style("opacity",0.25);
+      svg.append("circle")
+        .attr("r", 12.5*height/450)
+        .attr("cx", width*0.35)
+        .attr("cy", height*0.95)
+        .attr("fill", color_std)
+        .style("opacity",0.5);
+      svg.append("circle")
+        .attr("r", 5*height/450)
+        .attr("cx", width*0.35)
+        .attr("cy", height*0.95)
+        .attr("stroke","white")
+        .attr("stroke-width", height*0.005)
+        .attr("fill", color_std);
+      svg.append("text")             
+          .attr("transform",
+                "translate("+(width*0.38).toString()+","+(height*0.96).toString()+")")
+          .style("text-anchor", "left")
+          .text("state estimate")
+          .style("font-family", "arial")
+          .style("font-size", (12*width/600).toString()+"px")
+         
+      // (width*0.7).toString()+","+(height*0.35).toString()
+      // (width*0.8).toString()+","+(height*0.35).toString()
+      // (width*0.8).toString()+","+(height*0.375).toString()
+      // (width*0.7).toString()+","+(height*0.375).toString()
+      
+      
+      var true_position = getLemniscate(0);
+			svg.append("circle")
+        .attr("r", 10*height/450)
+        .attr("cx", values_to_pixels(true_position[0],axis="x"))
+        .attr("cy", values_to_pixels(true_position[1],axis="y"))
+        .attr("fill", "#333333")
+        .attr("stroke", "#333333")
+        .attr("stroke-width", 2.5*height/450)
+        .attr("opacity", 1.)
+        .attr("id","true_position");
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+      svg.append("polygon")
+         .attr("points", width.toString()+","+height.toString()+" "+width.toString()+","+(height*0.3).toString()+" "+(width*0.525).toString()+","+(height*0.3).toString()+" "+(width*0.525).toString()+","+height.toString())
+         .style("fill", "#ffffff") // ffffc2 #4794c1 047495 516572
+         .style("opacity", 0.5)
+         .style("stroke", "None");
+         
+      // Border for the satellite
+      svg.append("polygon")
+         .attr("points", "0,0 "+(width*0.5).toString()+",0 "+(width*0.5).toString()+","+(height*0.875).toString()+" 0,"+(height*0.875).toString())
+         .style("fill", "None") // ffffc2 #4794c1 047495 516572
+         .style("stroke", "#000000")
+         .style("strokeWidth", "3px");
+         
+         
+      // Opacity screen for overlap
+
+      // width.toString()+","+height.toString()
+      // width.toString()+","+(height*0.3).toString()
+      // (width*0.525).toString()+","+(height*0.3).toString()
+      // (width*0.525).toString()+","+height.toString()
+
+          
+      // Place the dropdown menu
+      document.getElementById('myDropdown').style.left = (width*0.265).toString()+"px";
+      document.getElementById('myDropdown').style.top = (height*0.025).toString()+"px";
+      document.getElementById('myDropdown').style.width = (height*0.4).toString()+"px";
+      document.getElementById('myDropdown').style.height = (height*0.075).toString()+"px";
+      document.getElementById('myDropdown').style.fontSize = (12*width/600).toString()+"px"; 
+          
+      var model = "true"
+      d3.select("#myDropdown").on("change", function() {
+        // Get the selected value
+        var selectedValue = d3.select(this).property("value");
+        // Set the copula to the selected value
+        model = selectedValue;
+        console.log(model)
+        gradient = getLemniscateDerivative(t);
+        prior_mean = true_position;
+      })
+         
+         
+         
+      // Draw the y axis
+      svg
+        .append("g")
+        .attr("transform", "translate("+subwindow_x[0].toString()+",0)")
+        .attr("id","mainxaxis")
+        .call(d3.axisLeft(subyScale).ticks(3))
+        .style("font-size", (12*width/600).toString()+"px");
+        //.call(d3.axisLeft(yScale).tickFormat(""));
+      svg.append("text")             
+          .attr("transform",
+                "translate("+(subwindow_x[1]+width*0.025).toString()+","+(math.mean(subwindow_y)).toString()+") rotate(270)")
+          .style("text-anchor", "middle")
+          .text("log density")
+          .style("font-family", "arial")
+          .style("font-size", (12*width/600).toString()+"px")
+         
+         
+         
+         
+         
+         
+
+          
+
+          
+         
+
+      var lineGenerator = d3.line();
+      lineGenerator.defined(function(d) { return !isNaN(d[1]); });
+
+      var data_mean = [[values_to_pixels(math.multiply(vec[0],trudist),axis="x"), values_to_pixels(math.multiply(vec[1],trudist),axis="y")],
+      [values_to_pixels(math.multiply(vec[0],trudist),axis="x"), values_to_pixels(math.multiply(vec[1],trudist),axis="y")]];
+      var pathString_mean = lineGenerator(data_mean);
+      svg.append('path')
+        .attr("d", pathString_mean)
+        .attr("stroke-width", 3*height/450)
+        .attr("fill", "none")
+        .attr("stroke", color_mean)
+        .style("opacity", 1.)
+        .transition()
+          .duration(fadeout/2/math.max(0.01,speed))
+          .style("opacity", 0.)
+          .ease(d3.easeCubicInOut)
+          .remove();
+
+
+
+
+      svg.append("text")             
+          .attr("transform",
+                "translate("+(width*0.75).toString()+","+(height*0.35).toString()+")")
+          .style("text-anchor", "middle")
+          .text("simulation speed")
+          .style("font-family", "arial")
+          .style("font-size", (12*width/600).toString()+"px")
+          
+      var slider_speed = d3
+        .sliderBottom()
+        .min(0)
+        .max(1)
+        .width(width*0.4)
+        .height(height*0.1)
+        .ticks(5)
+        .tickPadding(0)
+        .displayValue(false)
+        .default(speed)
+        .handle(
+          d3
+            .symbol()
+            .type(d3.symbolCircle)
+            .size(width/5)()
+        )
+        .tickFormat(d3.format(',.1f'))
+        .fill('#aaaaaa')
+        .on('onchange', val => {
+          //d3.select('p#value-fill').text(d3.format('.2%')(val));
+          speed = val;
+        });
+
+      var gslider_speed = d3
+        .select('svg')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height)
+        .append('g')
+        .attr("id","slider_speed")
+        .attr('transform', 'translate('+width*0.55+','+height*0.375+')');
+        
+      gslider_speed.call(slider_speed);
+
+
+
+
+
+      svg.append("text")             
+          .attr("transform",
+                "translate("+(width*0.75).toString()+","+(height*0.525).toString()+")")
+          .style("text-anchor", "middle")
+          .text("assimilation interval")
+          .style("font-family", "arial")
+          .style("font-size", (12*width/600).toString()+"px")
+          
+      var slider_assimilation_interval = d3
+        .sliderBottom()
+        .min(1)
+        .max(30)
+        .width(width*0.4)
+        .height(height*0.1)
+        .ticks(5)
+        .tickPadding(0)
+        .displayValue(false)
+        .default(resample_frequency)
+        .handle(
+          d3
+            .symbol()
+            .type(d3.symbolCircle)
+            .size(width/5)()
+        )
+        .tickFormat(d3.format(',.0f'))
+        .fill('#aaaaaa')
+        .on('onchange', val => {
+          //d3.select('p#value-fill').text(d3.format('.2%')(val));
+          resample_frequency = val;
+        });
+
+      var gslider_assimilation_interval = d3
+        .select('svg')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height)
+        .append('g')
+        .attr("id","slider_assimilation_interval")
+        .attr('transform', 'translate('+width*0.55+','+height*0.55+')');
+        
+      gslider_assimilation_interval.call(slider_assimilation_interval);
+
+
+
+
+
+          
+      svg.append("text")             
+          .attr("transform",
+                "translate("+(width*0.75).toString()+","+(height*0.7).toString()+")")
+          .style("text-anchor", "middle")
+          .text("observation error")
+          .style("font-family", "arial")
+          .style("font-size", (12*width/600).toString()+"px")
+          
+      var sliderSimple = d3
+        .sliderBottom()
+        .min(0)
+        .max(1.)
+        .width(width*0.4)
+        .height(height*0.1)
+        .ticks(5)
+        .tickPadding(0)
+        .displayValue(false)
+        .default(obs_sd)
+        .handle(
+          d3
+            .symbol()
+            .type(d3.symbolCircle)
+            .size(width/5)()
+        )
+        .tickFormat(d3.format(',.1f'))
+        .fill('#FF5000')
+        .on('onchange', val => {
+          //d3.select('p#value-fill').text(d3.format('.2%')(val));
+          obs_sd = val;
+          if (obs_sd == 0) {
+          	obs_sd = 0.001; // Prevent complete zero
+          }
+          R = [[math.pow(obs_sd,2), 0],[0, math.pow(obs_sd,2)]];
+        });
+
+      var gSimple = d3
+        .select('svg')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height)
+        .append('g')
+        .attr("id","slider_obs")
+        .attr('transform', 'translate('+width*0.55+','+height*0.725+')');
+        
+      gSimple.call(sliderSimple);
+          
+          
+          
+          
+      svg.append("text")             
+          .attr("transform",
+                "translate("+(width*0.75).toString()+","+(height*0.875).toString()+")")
+          .style("text-anchor", "middle")
+          .text("forecast error")
+          .style("font-family", "arial")
+          .style("font-size", (12*width/600).toString()+"px")
+          
+      var sliderSimple_right = d3
+        .sliderBottom()
+        .min(0)
+        .max(0.5)
+        .width(width*0.4)
+        .height(height*0.1)
+        .ticks(5)
+        .tickPadding(0)
+        .displayValue(false)
+        .default(mod_sd)
+        .handle(
+          d3
+            .symbol()
+            .type(d3.symbolCircle)
+            .size(width/5)()
+        )
+        .tickFormat(d3.format(',.1f'))
+        .fill('#4794c1')
+        .on('onchange', val => {
+          //d3.select('p#value-fill').text(d3.format('.2%')(val));
+          mod_sd = val;
+          if (mod_sd == 0) {
+          	mod_sd = 0.001; // Prevent complete zero
+          }
+          Q = [[math.pow(mod_sd,2), 0],[0, math.pow(mod_sd,2)]];
+        });
+
+      var gSimple_right = d3
+        .select('svg')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height)
+        .append('g')
+        .attr('transform', 'translate('+width*0.55+','+height*0.9+')');
+        
+      gSimple_right.call(sliderSimple_right);
+
+      svg
+        .selectAll('.axis text')
+        .attr('font-size', (12*width/600).toString()+"px") 
+          
+          
+      // =================================================================    
+      // Create cannonball elements
+      // =================================================================  
+;
+        
+
+
+     svg.append("polygon")
+         .attr("points", width.toString()+","+height.toString()+" "+width.toString()+","+(height*0.3).toString()+" "+(width*0.525).toString()+","+(height*0.3).toString()+" "+(width*0.525).toString()+","+height.toString())
+         .style("fill", "#ffffff") // ffffc2 #4794c1 047495 516572
+         .style("opacity", 0.5)
+         .style("stroke", "None")
+         .lower();
+        
+
+        
+
+      // helper function to output formatted results.
+      function print(value) {
+        var precision = 14;
+        document.write(math.format(value, precision) + '<br>');
+      }
+      
+      var autoupdate;
+      autoupdate = d3.timer(update)
+          
+      var cannon_fired = true;
+      var lastTime = d3.now();
+      var now
+      
+      var counter 	= d3.now();
+      var timestep = 0;
+      
+      var noise_tstep = 0;
+      
+      var assimilate = true;
+      
+
+      var densities = [];
+      var times_densities = [];
+      var pathString_densities = lineGenerator(pixels_densities(times_densities,densities));
+      var line_densities = svg.append('path')
+      	.attr("d", pathString_densities)
+        .attr("stroke-width", 2*height/450)
+        .attr("fill", "none")
+        .attr("stroke", "#000000")
+        .attr("id", "densities_graph")
+        
+      var pathString_mean_densities = lineGenerator([[subwindow_x[0],subwindow_y[1]],[subwindow_x[1],subwindow_y[1]]]);
+      var line_mean_densities = svg.append('path')
+      	.attr("d", pathString_mean_densities)
+        .attr("stroke-width", 2*height/450)
+        .attr("fill", "none")
+        .attr("stroke", "#ff5500")
+        .attr("id", "mean_densities_graph")
+      
+      // Draw a label for the mean
+      svg.append("text")             
+          .attr("transform",
+                "translate("+(width*0.9).toString()+","+(subwindow_y[1]-height*0.025).toString()+")")
+          .style("text-anchor", "middle")
+          .text("avg. log density")
+          .style("font-family", "arial")
+          .style("font-size", (10*width/600).toString()+"px")
+          .style("fill", "#ff5500")
+          .attr("id","linelabel");
+      
+      
+      
+      
+      
+
+
+      function getLemniscate(t) {
+        // Original lemniscate parametric coordinates
+        const x = (a * Math.sin(t)) / (1 + Math.cos(t) ** 2);
+        const y = (a * Math.sin(t) * Math.cos(t)) / (1 + Math.cos(t) ** 2);
+
+        // Apply 45 degree rotation
+        const rotatedX = x * Math.cos(angle) - y * Math.sin(angle);
+        const rotatedY = x * Math.sin(angle) + y * Math.cos(angle);
+
+        return [rotatedX + centerX, rotatedY + centerY];
+      }
+
+      function getLemniscateDerivative(t) {
+      
+          const cosAngle = Math.cos(angle);
+          const sinAngle = Math.sin(angle);
+
+          // Derivative of the parametric equations for the lemniscate
+          const dx_dt = (a * (Math.cos(t) * (1 + Math.cos(t) ** 2) + 2 * Math.sin(t) ** 2 * Math.cos(t))) / (1 + Math.cos(t) ** 2) ** 2;
+          const dy_dt = (a * (Math.cos(2 * t) * (1 + Math.cos(t) ** 2) + 2 * Math.sin(t) ** 2 * Math.cos(t) ** 2)) / (1 + Math.cos(t) ** 2) ** 2;
+
+          // Apply 45 degree rotation to the derivatives
+          const rotatedDx = dx_dt * cosAngle - dy_dt * sinAngle;
+          const rotatedDy = dx_dt * sinAngle + dy_dt * cosAngle;
+
+          // Return the rotated derivative (velocity) vector
+          return [rotatedDx, rotatedDy];
+      }
+
+
+
+      // Create the path for the infinity track
+      const line = d3.line()
+      .x(d => d[0])
+      .y(d => d[1]);
+
+      // Generate the data points for the rotated infinity track
+      var points = d3.range(0, 2 * Math.PI, 0.01).map(getLemniscate);
+      
+      console.log(points)
+      points = values_to_pixels(points, "xy");
+      console.log(points)
+      
+      // Draw the infinity track
+      svg.append("path")
+        .datum(points)
+        .attr("class", "track")
+        .style("stroke","black")
+        .style("fill","none")
+        .attr("d", line);
+      
+      
+      // Set the prior to the current true state
+      prior_mean = true_position;
+      prior_cov = [[math.pow(prior_sd,2),0],[0,math.pow(prior_sd,2)]];
+
+      // Plot the prior
+      var ellipse_moments = cov_to_ellipse(prior_cov);
+
+
+      // Add ellipse
+      svg.append("ellipse")
+        .attr("cx", values_to_pixels(prior_mean[0],"x"))          // X-coordinate of the center
+        .attr("cy", values_to_pixels(prior_mean[1],"y"))          // Y-coordinate of the center
+        .attr("rx", ellipse_moments[0]*scale_X)                // Radius along x-axis (2 * std_dev_x)
+        .attr("ry", ellipse_moments[1]*scale_Y)                // Radius along y-axis (2 * std_dev_y)
+        .attr("transform", `rotate(${ellipse_moments[2]}, ${values_to_pixels(prior_mean[0],"x")}, ${values_to_pixels(prior_mean[1],"y")})`) // Rotate based on eigenvector direction
+        .style("fill", color_std)
+        .style("stroke", "none")
+        .style("opacity",0.25)
+        .attr("class","state_estimate")
+        .attr("id","state_estimate_2std");
+
+      // Add ellipse
+      svg.append("ellipse")
+        .attr("cx", values_to_pixels(prior_mean[0],"x"))          // X-coordinate of the center
+        .attr("cy", values_to_pixels(prior_mean[1],"y"))          // Y-coordinate of the center
+        .attr("rx", ellipse_moments[0]*scale_X/2)                // Radius along x-axis (2 * std_dev_x)
+        .attr("ry", ellipse_moments[1]*scale_Y/2)                // Radius along y-axis (2 * std_dev_y)
+        .attr("transform", `rotate(${ellipse_moments[2]}, ${values_to_pixels(prior_mean[0],"x")}, ${values_to_pixels(prior_mean[1],"y")})`) // Rotate based on eigenvector direction
+        .style("fill", color_std)
+        .style("stroke", "none")
+        .style("opacity",0.5)
+        .attr("class","state_estimate")
+        .attr("id","state_estimate_1std");
+
+      // Append a single '+' marker using a text element
+      svg.append("circle")
+        .attr("cx", values_to_pixels(true_position[0],"x"))  // X position
+        .attr("cy", values_to_pixels(true_position[1],"y"))// Y position
+        .attr("r", height*0.015)
+        .attr("fill", color_std)  // Color of the '+'
+        .attr("stroke","white")
+        .attr("stroke-width", height*0.005)
+        .attr("class","state_estimate")
+        .attr("id","state_estimate_mean");
+      
+      
+      
+      
+      var dt_counter = 0;
+      
+      var speed_counter = 0;
+      
+      var gradient = [];
+
+      function update(elapsed) {
+        
+        //diff = now - lastTime
+        
+        	speed_counter += speed;
+          
+          if (true) {
+          
+          	speed_counter = 0;
+          
+
+            now = d3.now()
+            diff = now - counter
+
+            counter = now;
+
+            // Update the time
+            t 			+= dt*speed;
+            if (t >= 2*math.pi) {
+              t 	-= 2*math.pi;
+            }
+
+            dt_counter += speed;
+
+            timestep += speed;
+
+            true_position = getLemniscate(t);
+            d3.select("#true_position")
+              .attr("cx", values_to_pixels(true_position[0],axis="x"))
+              .attr("cy", values_to_pixels(true_position[1],axis="y"));
+
+            // ==================================================================
+            // PREDICTION 
+            // ==================================================================
+
+            // Make a forecast
+            if (assimilate) {
+              if (model == "nomodel") {
+                prior_mean = prior_mean; // Do nothing, lol.
+                prior_cov = math.add(prior_cov, Q);
+              } else if (model == "extrapolate") {
+                if (gradient.length == 2) {
+                  svg.append("line")
+                    .attr("x1", values_to_pixels(prior_mean[0],axis="x"))
+                    .attr("y1", values_to_pixels(prior_mean[1],axis="y"))
+                    .attr("x2", values_to_pixels(prior_mean[0] + gradient[0]*dt*speed,axis="x"))
+                    .attr("y2", values_to_pixels(prior_mean[1] + gradient[1]*dt*speed,axis="y"))
+                    .style("stroke",color_std)
+                    .style("stroke-width",height/100)
+                    .style("opacity", 1.)
+                    .transition()
+                      .duration(fadeout/2/math.max(0.01,speed))
+                      .style("opacity", 0.)
+                      .ease(d3.easeCubicInOut)
+                      .remove();
+                  prior_mean = math.add(
+                    prior_mean,
+                    math.multiply(
+                      dt*speed,
+                      gradient)); // Do nothing, lol.
+                 }
+              } else if (model == "true") {   
+                if (gradient.length == 2) {
+                  svg.append("line")
+                    .attr("x1", values_to_pixels(prior_mean[0],axis="x"))
+                    .attr("y1", values_to_pixels(prior_mean[1],axis="y"))
+                    .attr("x2", values_to_pixels(prior_mean[0] + gradient[0]*dt*speed,axis="x"))
+                    .attr("y2", values_to_pixels(prior_mean[1] + gradient[1]*dt*speed,axis="y"))
+                    .style("stroke",color_std)
+                    .style("stroke-width",height/100)
+                    .style("opacity", 1.)
+                    .transition()
+                      .duration(fadeout/2/math.max(0.01,speed))
+                      .style("opacity", 0.)
+                      .ease(d3.easeCubicInOut)
+                      .remove();
+                }
+                gradient = getLemniscateDerivative(t);
+                prior_mean = math.add(
+                  prior_mean,
+                  math.multiply(
+                    dt*speed,
+                    gradient)); // Do nothing, lol.
+              }
+
+                prior_cov = math.add(prior_cov, math.multiply(Q,speed));
+              }
+
+
+
+
+              // Plot the prior
+              var ellipse_moments = cov_to_ellipse(prior_cov);
+
+              // Add ellipse
+              d3.select("#state_estimate_2std")
+                  .attr("cx", values_to_pixels(prior_mean[0],"x"))
+                  .attr("cy", values_to_pixels(prior_mean[1],"y"))
+                  .attr("rx", ellipse_moments[0]*scale_X)
+                  .attr("ry", ellipse_moments[1]*scale_Y)
+                  .attr("transform", `rotate(${ellipse_moments[2]}, ${values_to_pixels(prior_mean[0],"x")}, ${values_to_pixels(prior_mean[1],"y")})`);
+
+              // Add ellipse
+              d3.select("#state_estimate_1std")
+                  .attr("cx", values_to_pixels(prior_mean[0],"x"))
+                  .attr("cy", values_to_pixels(prior_mean[1],"y"))
+                  .attr("rx", ellipse_moments[0]*scale_X/2)
+                  .attr("ry", ellipse_moments[1]*scale_Y/2)
+                  .attr("transform", `rotate(${ellipse_moments[2]}, ${values_to_pixels(prior_mean[0],"x")}, ${values_to_pixels(prior_mean[1],"y")})`);
+
+              // Append a single '+' marker using a text element
+              d3.select("#state_estimate_mean")
+                  .attr("cx", values_to_pixels(prior_mean[0],"x"))  // X position
+                  .attr("cy", values_to_pixels(prior_mean[1],"y"));
+
+            // ==================================================================
+            // ASSIMILATION 
+            // ==================================================================
+
+            // Assimilate regularly
+            if (dt_counter >= resample_frequency && assimilate) {
+
+              // Reset counter
+              dt_counter = 0
+
+              // Create an observation
+              obs = [true_position[0] + Gaussian_sample(0,obs_sd_true), true_position[1] + Gaussian_sample(0,obs_sd_true)];
+              // Plot the observation
+              svg.append("circle")
+                .attr("r", 5*height/450)
+                .attr("cx", values_to_pixels(obs[0],axis="x"))
+                .attr("cy", values_to_pixels(obs[1],axis="y"))
+                .attr("fill", "#FF5000")
+                .attr("class","obs_scatter")
+                .style("opacity", 1.)
+                .transition()
+                  .duration(fadeout/2/math.max(0.01,speed))
+                  .style("opacity", 0.)
+                  .ease(d3.easeCubicInOut)
+                  .remove();
+
+               /*
+               console.log(math.sum(prior_cov))
+               if (math.sum(prior_cov) < 000002) {
+                prior_cov = [[0.000001, 0],[0,0.000001]];
+               }
+               */
+
+
+              var denominator = math.inv(
+                math.add(
+                  prior_cov,
+                  R))
+
+
+						   var old_prior_mean = prior_mean;
+
+
+               // Update the prior
+               prior_mean = math.subtract(
+                  prior_mean,
+                  math.multiply(
+                    math.multiply(
+                      prior_cov,
+                      denominator),
+                    math.subtract(
+                      prior_mean,
+                      obs)
+                     )
+                   )
+               prior_cov = math.subtract(
+                  prior_cov,
+                  math.multiply(
+                    math.multiply(
+                      prior_cov,
+                      denominator),
+                    prior_cov)
+                  )
+                  
+              svg.append("line")
+                .attr("x1", values_to_pixels(prior_mean[0],axis="x"))
+                .attr("y1", values_to_pixels(prior_mean[1],axis="y"))
+                .attr("x2", values_to_pixels(old_prior_mean[0],axis="x"))
+                .attr("y2", values_to_pixels(old_prior_mean[1],axis="y"))
+                .style("stroke","#ff5000")
+                .style("stroke-width",height/200)
+                .style("opacity", 1.)
+                .transition()
+                .duration(fadeout/2/math.max(0.01,speed))
+                .style("opacity", 0.)
+                .ease(d3.easeCubicInOut)
+                .remove();
+                  
+
+              if (model == "extrapolate") {
+                gradient = getLemniscateDerivative(t);
+              }
+
+
+             }
+
+
+
+            if (assimilate) {
+
+              // Determine the new true position
+              density = logGaussianPDF(x = true_position, loc = prior_mean, scale = prior_cov);
+              densities.push(density);
+              times_densities = math.add(times_densities,speed)
+              times_densities.push(0)
+              
+              while (times_densities[0] > loglength) {
+              	densities.shift()
+                times_densities.shift()
+              }
+
+
+              pathString_densities = lineGenerator(pixels_densities(times_densities,densities));
+              d3.select("#densities_graph")
+                .attr("d", pathString_densities)
+                .lower();
+
+              if (densities.length > 1) {
+
+
+                // Update the log density plot
+                mean_density = math.mean(densities)
+                if (mean_density >= suby_limits[0]) {
+                  ypos = (1-(mean_density-suby_limits[0])/(suby_limits[1]-suby_limits[0]))*(subwindow_y[1]-subwindow_y[0])+subwindow_y[0];
+                } else {
+                  ypos = subwindow_y[1];
+                }
+
+
+                pathString_mean_densities = lineGenerator([[subwindow_x[0],ypos],[subwindow_x[1],ypos]]);
+                d3.select("#mean_densities_graph")
+                  .attr("d", pathString_mean_densities)
+
+                // Shift the label
+                d3.select("#linelabel")    
+                  .text("avg. = "+(math.round(mean_density*100)/100).toString())
+                  .attr("transform",
+                        "translate("+(width*0.9).toString()+","+(ypos-height*0.025).toString()+")");
+
+              }
+
+            }
+
+          lastTime = now
+
+        }
+        
+        
+        
+      }
+          
+
+
+ 
+        
+    function Gaussian_sample(mu,sd) {
+    
+      val 	= mu + sd*math.sqrt(2)*erfinv(2*math.random()-1);
+
+      return val;
+    }
+    
+    function erfinv(x){
+        var z;
+        var a  = 0.147;                                                   
+        var the_sign_of_x;
+        if(0==x) {
+            the_sign_of_x = 0;
+        } else if(x>0){
+            the_sign_of_x = 1;
+        } else {
+            the_sign_of_x = -1;
+        }
+
+        if(0 != x) {
+            var ln_1minus_x_sqrd = Math.log(1-x*x);
+            var ln_1minusxx_by_a = ln_1minus_x_sqrd / a;
+            var ln_1minusxx_by_2 = ln_1minus_x_sqrd / 2;
+            var ln_etc_by2_plus2 = ln_1minusxx_by_2 + (2/(Math.PI * a));
+            var first_sqrt = Math.sqrt((ln_etc_by2_plus2*ln_etc_by2_plus2)-ln_1minusxx_by_a);
+            var second_sqrt = Math.sqrt(first_sqrt - ln_etc_by2_plus2);
+            z = second_sqrt * the_sign_of_x;
+        } else { // x is zero
+            z = 0;
+        }
+      return z;
+    }
+    
+
+    
+    
+ 
+    
+    function pixels_to_values(coords, axis) {
+        axis = (typeof axis === 'undefined') ? 'xy' : axis;
+
+        function map_x(coord) {
+            return (coord - window_x[0]) / (window_x[1] - window_x[0]) * (xrange[1] - xrange[0]) + xrange[0];
+        }
+
+        function map_y(coord) {
+            return (1 - (coord - window_y[0]) / (window_y[1] - window_y[0])) * (yrange[1] - yrange[0]) + yrange[0];
+        }
+
+        if (axis == 'x') {
+            if (Array.isArray(coords)) {
+                return coords.map(map_x);
+            } else {
+                return map_x(coords);
+            }
+        } else if (axis == 'y') {
+            if (Array.isArray(coords)) {
+                return coords.map(map_y);
+            } else {
+                return map_y(coords);
+            }
+        } else {
+            if (Array.isArray(coords[0])) {
+                return coords.map(function(coord) {
+                    return [map_x(coord[0]), map_y(coord[1])];
+                });
+            } else {
+                return [map_x(coords[0]), map_y(coords[1])];
+            }
+        }
+    }
+
+
+    function values_to_pixels(values, axis) {
+        axis = (typeof axis === 'undefined') ? 'xy' : axis;
+
+        function map_x(val) {
+            return (val - xrange[0]) / (xrange[1] - xrange[0]) * (window_x[1] - window_x[0]) + window_x[0];
+        }
+
+        function map_y(val) {
+            return (1 - (val - yrange[0]) / (yrange[1] - yrange[0])) * (window_y[1] - window_y[0]) + window_y[0];
+        }
+
+        if (axis == 'x') {
+            if (Array.isArray(values)) {
+                return values.map(map_x);
+            } else {
+                return map_x(values);
+            }
+        } else if (axis == 'y') {
+            if (Array.isArray(values)) {
+                return values.map(map_y);
+            } else {
+                return map_y(values);
+            }
+        } else {
+            if (Array.isArray(values[0])) {
+                return values.map(function(val) {
+                    return [map_x(val[0]), map_y(val[1])];
+                });
+            } else {
+                return [map_x(values[0]), map_y(values[1])];
+            }
+        }
+    }
+
+    
+    function pixels_densities(times_densities,densities) {
+    
+    	pixels = [];
+      
+      for (let i = 0; i < densities.length; i++) {
+      
+      	xpos = (loglength-times_densities[i]-subx_limits[0])/(subx_limits[1]-subx_limits[0])*(subwindow_x[1]-subwindow_x[0])+subwindow_x[0];
+        
+        ypos = (1-(densities[i]-suby_limits[0])/(suby_limits[1]-suby_limits[0]))*(subwindow_y[1]-subwindow_y[0])+subwindow_y[0];
+      
+      	pixels.push([xpos,ypos]);
+      
+      }
+      
+     	return pixels;
+    }
+    
+    
+    // This function converts a covariance matrix into an ellipse
+    function cov_to_ellipse(cov) {
+    
+      // Step 1: Calculate eigenvalues and eigenvectors using Math.js
+      let eig = math.eigs(prior_cov);
+
+      // Extract eigenvalues and eigenvectors
+      let values = eig.values;   // Eigenvalues
+      let vectors = eig.eigenvectors; // Eigenvectors
+
+      // Step 2: Scale eigenvalues for 2 standard deviations (2 * sqrt(eigenvalue))
+      let scale_x = 2 * Math.sqrt(values[0]);
+      let scale_y = 2 * Math.sqrt(values[1]);
+
+      // Step 3: Calculate the angle of rotation (from the eigenvectors)
+      let v1_x = vectors[0].vector[0];  // x-component of the first eigenvector
+      let v1_y = vectors[0].vector[1];  // y-component of the first eigenvector
+      let angle = Math.atan2(v1_y, v1_x) * 180 / Math.PI; // In degrees
+    
+    	return [scale_x, scale_y, angle]
+    
+    }
+    
+    
+    
+
+    function logGaussianPDF(x, mean, covariance) {
+      const n = x.length; // Dimensionality
+
+      // Convert to math.js matrices
+      const xVec = math.matrix(x);
+      const meanVec = math.matrix(mean);
+      const covMat = math.matrix(covariance);
+
+      // Compute the inverse of the covariance matrix
+      const covInv = math.inv(covMat);
+
+      // Compute the difference (x - mean)
+      const diff = math.subtract(xVec, meanVec);
+
+      // Compute Mahalanobis distance: (x - mean)^T * Sigma^{-1} * (x - mean)
+      const mahalanobis = math.multiply(math.transpose(diff), covInv, diff);
+
+      // Compute determinant of the covariance matrix
+      const covDet = math.det(covMat);
+
+      // Compute the normalization constant: log((2 * PI)^n * det(Sigma))
+      const normalization = n * Math.log(2 * Math.PI) + Math.log(covDet);
+
+      // Compute the log PDF: -0.5 * (Mahalanobis distance + normalization)
+      const logPDF = -0.5 * (mahalanobis + normalization);
+
+      return logPDF;
+    }
+    
+        
+    </script>
+    
+  </body>
+
+</html>
