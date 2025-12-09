@@ -56,6 +56,7 @@ $$
 
 ---
 
+---
 CDF (top row) and PDF (bottom row) isolines for the Gaussian copula are shown for three levels of positive dependence, i.e., $\tau = 0.2$, $\tau = 0.4$ (middle), and $\tau = 0.8$ (right). Note that the representations are on different scales: the CDF is in the unit space, while the PDF is in the normal space to better highlight the dependence structure.
 
 ```
@@ -76,6 +77,7 @@ where $\delta \geq 1 $ is the copula's parameter. For $\delta \rightarrow \infty
 
 ---
 
+---
 CDF (top row) and PDF (bottom row) isolines for the Gumbel copula are shown for three levels of positive dependence, i.e., $\tau = 0.2$, $\tau = 0.4$ (middle), and $\tau = 0.8$ (right). Note that the representations are on different scales: the CDF is in the unit space, while the PDF is in the normal space to better highlight the dependence structure.
 
 ```
@@ -96,6 +98,7 @@ where $0 < \delta < \infty $ is the copula's parameter governing the dependence.
 
 ---
 
+---
 CDF (top row) and PDF (bottom row) isolines for the Clayton copula are shown for three levels of positive dependence, i.e., $\tau = 0.2$, $\tau = 0.4$ (middle), and $\tau = 0.8$ (right). Note that the representations are on different scales: the CDF is in the unit space, while the PDF is in the normal space to better highlight the dependence structure.
 
 ```
