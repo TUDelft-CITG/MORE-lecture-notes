@@ -31,7 +31,7 @@ parts:
         sections:
           - file: bicopula/multi_data_exp.md
           - file: bicopula/bivariate_cop.md
-          - file: bicopula/cop_family.md
+          - file: bicopula/cop_fam.md
           - file: bicopula/taildep.md
           - file: bicopula/fitting.md
           - file: bicopula/gof_methods.md
