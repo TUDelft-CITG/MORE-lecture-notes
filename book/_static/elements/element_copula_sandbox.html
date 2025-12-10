@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <script src="https://unpkg.com/mathjs/lib/browser/math.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3-contour@4"></script>
+    <script src="https://unpkg.com/d3-simple-slider"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jstat/dist/jstat.min.js"></script>
+    
+    <style>
+      body{
+          margin: 0; overflow: hidden;
+          font-family: Helvetica, sans-serif;
+        }
+      .my_datavizdiv {
+          position: absolute;
+      }
+      svg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        background-color: None
+      }
+      #myDropdown { position: absolute; top: 0; left: 0; font-family: Helvetica, sans-serif;}
+    </style>
+  </head>
+
+<!-- Create a div where the graph will take place -->
+<div id="my_datavisualization">
+  <svg id="click" xmlns="http://www.w3.org/2000/svg">
+  </svg>
+  
+  <!-- The dropdown select element -->
+  <select id="myDropdown" >
+    <!-- Three options for the dropdown -->
+    <option value="gaussian">Gaussian</option>
+    <option value="clayton">Clayton</option>
+    <option value="gumbel">Gumbel</option>
+    <option value="frank">Frank</option>
+    <option value="studentst">Student's T</option>
+  </select>
+  
+</div>
+
+
+
+  <body style='overflow:hidden'>
+  
+    
+    <script>
+    
+      // Get the viewport height and width
+      const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
+      const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
+
+			var height  	= vh;
+      var width 		= vw;
+      
+      const aspect 	= 2;
+      
+      if (vw/aspect < vh) {
+      	// Viewport width is limiting
+        var width 	= vw;
+        var height 	= vw/aspect;
+      } else {
+      	// Viewport height is limiting
+      	var width 	= vh*aspect;
+        var height 	= vh;
+      }
+
+      // Create the canvas. We will use only part of it for the main plot
+      var svg = d3.select("#click") // This selects the div
+          .attr("width", width) // This defines the canvas' width
+          .attr("height", height) // This defines the canvas' height
+          
+          
+			// Define starting values
+      var copula = "gaussian";
+      var correlation = 0.5;
+      var theta = 2;
+      var degreesOfFreedom = 2;
+          
+      // D3.js code to handle the dropdown change event
+      d3.select("#myDropdown").on("change", function() {
+        // Get the selected value
+        var selectedValue = d3.select(this).property("value");
+        // Set the copula to the selected value
+        copula = selectedValue;
+        // Update the figure
+        selectCopula()
+      });
+      
+      // Label the slider for the correlation
+      svg.append("text")             
+        .attr("transform",
+              "translate("+(width*0.75).toString()+","+(height*0.21).toString()+")")
+        .style("text-anchor", "middle")
+        .text("selected copula")
+        .style("font-family", "arial")
+        .style("font-size", (12*width/600).toString()+"px")
+      
+      // Place the dropdown menu
+		  document.getElementById('myDropdown').style.left = (width*0.62).toString()+"px";
+      document.getElementById('myDropdown').style.top = (height*0.25).toString()+"px";
+      document.getElementById('myDropdown').style.width = (height*0.5).toString()+"px";
+      document.getElementById('myDropdown').style.height = (height*0.075).toString()+"px";
+      document.getElementById('myDropdown').style.fontSize = (12*width/600).toString()+"px";
+      
+      // Label the legend
+      svg.append("text")             
+        .attr("transform",
+              "translate("+(width*0.75).toString()+","+(height*0.76).toString()+")")
+        .style("text-anchor", "middle")
+        .text("probability density")
+        .style("font-family", "arial")
+        .style("font-size", (12*width/600).toString()+"px")
+      
+      // Draw a colorbar
+      for (let i = 0; i < 256; i++) {
+      	svg.append("rect")
+       		.attr("x",0.525*width + 0.45*1/255*width*i)
+          .attr("y",0.8*height)
+          .attr("width",0.45*1/255*width)
+          .attr("height",height*0.05)
+          .style("fill", d3.interpolateSpectral(1 - i/255))
+          .style("stroke", d3.interpolateSpectral(1 - i/255))
+          .style("stroke-width",height*0.01)
+      }
+      
+      svg.append("text")             
+        .attr("transform",
+              "translate("+(width*0.54).toString()+","+(height*0.9).toString()+")")
+        .style("text-anchor", "middle")
+        .text("low")
+        .style("font-family", "arial")
+        .style("font-size", (10*width/600).toString()+"px")
+        
+      svg.append("text")             
+        .attr("transform",
+              "translate("+(width*0.96).toString()+","+(height*0.9).toString()+")")
+        .style("text-anchor", "middle")
+        .text("high")
+        .style("font-family", "arial")
+        .style("font-size", (10*width/600).toString()+"px")
+          
+      
+			// ===========================================================================
+          
+      var x_limits = [0,1];
+      var y_limits = [0,1];
+
+      const window_x = [width * 0.075, width * 0.47];
+      const window_y = [height * 0.1, height * 0.89];
+
+      // Get scaling functions for the x scale and the y_scale
+      const xScale = d3.scaleLinear()
+          .domain([x_limits[0], x_limits[1]])
+          .range(window_x)
+      const xScale_inverse = d3.scaleLinear()
+          .domain(window_x)
+          .range([x_limits[0], x_limits[1]])
+      const yScale = d3.scaleLinear()
+          .domain([y_limits[0], y_limits[1]])
+          .range([window_y[1], window_y[0]])
+          
+      svg.append("rect")
+      	.attr("x", 	window_x[0])
+        .attr("y", 	window_y[0])
+      	.attr("width", 	window_x[1] - window_x[0])
+        .attr("height", window_y[1] - window_y[0])
+        .style("fill","None")
+        .style("stroke","black")
+        .style("stroke-width",height/300)
+
+      // Draw the x axis
+      svg
+          .append("g")
+          .attr("transform", "translate(0," + window_y[1].toString() + ")")
+          .call(d3.axisBottom(xScale).ticks(5))
+          .style("font-size", (10 * width / 600).toString() + "px")
+      svg.append("text")
+          .attr("transform",
+              "translate(" + (math.mean(window_x)).toString() + "," + (height * 0.975).toString() + ")")
+          .style("text-anchor", "middle")
+          .text("u")
+          .style("font-size", (10 * width / 600).toString() + "px")
+
+      // Draw the y axis
+      svg
+          .append("g")
+          .attr("transform", "translate(" + (window_x[0]).toString() + ",0)")
+          .attr("id", "mainxaxis")
+          .call(d3.axisLeft(yScale).ticks(5))
+          .style("font-size", (10 * width / 600).toString() + "px");
+      //.call(d3.axisLeft(yScale).tickFormat(""));
+      svg.append("text")
+          .attr("transform",
+              "translate(" + (width * 0.03).toString() + "," + (math.mean(window_y)).toString() + ") rotate(270)")
+          .style("text-anchor", "middle")
+          .text("v")
+          .style("font-size", (10 * width / 600).toString() + "px")
+
+
+      // ===========================================================================
+
+			// Define a color range
+      const color = d3.scaleLinear()
+        .domain([0,1])
+        .interpolate(function() { return d3.interpolateRgbBasis(["#666666","#ffffff"])});  
+
+      // Sample the gridpoints
+      var gridpoints = [];
+      const resolution = 101;
+      const lspace = linspace(0.05,0.95,resolution);
+      for (let row = 0; row < resolution; row++) {
+        for (let col = 0; col < resolution; col++) {
+          gridpoints.push([lspace[col],lspace[row]])
+        }
+      }
+      
+      // Create a clip path for the contours, we don't want to extrapolate
+      svg.append("clipPath")       // define a clip path
+          .attr("id", "rect-clip") // give the clipPath an ID
+        .append("rect")          // shape it as an ellipse
+          .attr("x", 	window_x[0])
+          .attr("y", 	window_y[0])
+          .attr("width", 	window_x[1] - window_x[0])
+          .attr("height", window_y[1] - window_y[0]);
+      
+      // Create a generator for the contours
+      var thresholds = 25;
+      var ranges = d3.range(0, 1, 1 / thresholds)
+      var contours = d3.contours()
+        .size([resolution, resolution])
+        .thresholds(ranges);
+        
+
+      
+      selectCopula()
+
+
+
+
+
+
+
+
+
+
+
+
+			// ===========================================================================
+			// Helper functions
+      
+      function cdfNormal (x, mean, standardDeviation) {
+      	return math.divide(math.subtract(1,math.erf(math.divide(math.subtract(mean,x),math.sqrt(2)*standardDeviation))),2)
+      }
+
+      function erfinv(x) {
+        // maximum relative error = .00013
+        const a  = 0.147  
+        //if (0 == x) { return 0 }
+        const b = 2/(Math.PI * a) + Math.log(1-x**2)/2
+        const sqrt1 = Math.sqrt( b**2 - Math.log(1-x**2)/a )
+        const sqrt2 = Math.sqrt( sqrt1 - b )
+        return sqrt2 * Math.sign(x)
+      }
+      
+      // Inverse of standard normal distribution CDF using Newton's method
+      function inverseStandardNormalCDF(p) {
+          return math.sqrt(2) * erfinv(2 * p - 1);
+      }
+      
+      // Linspace
+      function linspace(start, end, resolution) {
+          var spacing = [];
+          // Go through a for-loop
+          var i;
+          for (i = 0; i < resolution; i++) {
+              spacing.push(start + (end - start) * i / (resolution - 1))
+          }
+          return spacing; // The function returns the linspace between p1 and p2
+      }
+
+			
+			// Gaussian copula
+      function CopulaGaussianPdf(x,correlation){
+      
+      	// Calculate prefactor
+        var corrmat = [[1,correlation],[correlation,1]];
+        var prefactor = 1/math.sqrt(math.det(corrmat));
+        var identity_minus_corrmat_inv = math.subtract(math.inv(corrmat),[[1,0],[0,1]]);
+        
+        // Compute the copula density
+        var density = [];
+        var origvars = [];
+        for (i = 0; i < x.length; i++) {
+        
+        		// Evaluate the inverse cdf at this point
+        		origvars = [inverseStandardNormalCDF(x[i][0], 0, 1),inverseStandardNormalCDF(x[i][1], 0, 1)];
+            
+            // EValuate the copula density
+        		density.push(
+            	prefactor*math.exp(
+              	-1/2*math.multiply(
+                	math.multiply(
+                    [origvars],
+                    identity_minus_corrmat_inv
+                  ),
+                  math.transpose([origvars])
+                )
+              )
+            )
+        
+        }
+        
+				return density;
+      
+      }
+      
+      function CopulaClaytonPdf(x, theta) {
+        // Compute the copula density
+        var density = [];
+        for (i = 0; i < x.length; i++) {
+            // EValuate the copula density
+            density.push(
+            	(theta + 1)*math.pow(x[i][0]*x[i][1],-theta-1)*math.pow((math.pow(x[i][0],-theta)+math.pow(x[i][1],-theta)-1),-(2*theta+1)/theta))
+        }
+        return density;
+      }
+      
+      function CopulaGumbelPdf(x, theta) {
+        // Compute the copula density
+        var density = [];
+        for (i = 0; i < x.length; i++) {
+        
+        		// EValuate the copula density
+            var a = math.pow(x[i][0]*x[i][1], -1)
+            var tmp = math.pow(-math.log(x[i][0]), theta) + math.pow(-math.log(x[i][1]), theta)
+            var b = math.pow(tmp, -2 + 2.0 / theta)
+            var c = math.pow(math.log(x[i][0]) * math.log(x[i][1]), theta - 1)
+            var d = 1 + (theta - 1) * math.pow(tmp, -1.0 / theta)
+
+            density.push(a*b*c*d*math.exp(-math.pow(tmp, 1.0 / theta)))
+
+        }
+        return density;
+      }
+      
+      function CopulaFrankPdf(x, theta) {
+      
+      	function g(y) {
+        	return math.exp(-theta*y) - 1
+        }
+      
+        // Compute the copula density
+        var density = [];
+        for (i = 0; i < x.length; i++) {
+
+            density.push(-theta*g(1)*(1 + g(x[i][0] + x[i][1]))/math.pow(g(x[i][0])*g(x[i][1])+g(1),2));
+
+        }
+        return density;
+      }
+      
+      function CopulaStudentsTPdf(x, correlation) {
+      
+        var d = 2;
+        
+        var corrmat = [[1,correlation],[correlation,1]];
+      
+        // Compute the copula density
+        var density = [];
+        var s,t,s_sq,t_sq,K2,tmp;
+        for (i = 0; i < x.length; i++) {
+        
+        	s = jStat.studentt.inv(x[i][0], degreesOfFreedom);
+        	s_sq = math.pow(s,2); 
+          t = jStat.studentt.inv(x[i][1], degreesOfFreedom);
+          t_sq = math.pow(t,2); 
+          K2 = 1/2*math.pow(math.gamma(degreesOfFreedom/2)/math.gamma(0.5 + degreesOfFreedom/2),2)*degreesOfFreedom*math.pow(1-math.pow(correlation,2),-1/2);
+          
+          tmp = K2*math.pow((1+s_sq/degreesOfFreedom)*(1+t_sq/degreesOfFreedom),(degreesOfFreedom+1)/2)*math.pow(1 + (s_sq + t_sq - 2*correlation*s*t)/((1-math.pow(correlation,2))*degreesOfFreedom),-1-degreesOfFreedom/2);
+          
+
+          density.push(tmp);
+
+
+
+        }
+        return density;
+      }      
+  
+			// Draw contours
+      function drawContours(){
+      
+        if (copula == "gaussian") {
+
+          if (correlation == 0) {
+
+            svg.selectAll(".contourline")
+              .remove()
+
+            svg.append("rect")          // shape it as an ellipse
+              .attr("x", 	window_x[0])
+              .attr("y", 	window_y[0])
+              .attr("width", 	window_x[1] - window_x[0])
+              .attr("height", window_y[1] - window_y[0])
+              .style("fill",d3.interpolateSpectral(0.5))
+              .attr("class","contourline");
+
+          } else if (correlation == -1) {
+
+            svg.selectAll(".contourline")
+              .remove()
+
+            svg.append("rect")          // shape it as an ellipse
+              .attr("x", 	window_x[0])
+              .attr("y", 	window_y[0])
+              .attr("width", 	window_x[1] - window_x[0])
+              .attr("height", window_y[1] - window_y[0])
+              .style("fill",d3.interpolateSpectral(1.))
+              .attr("class","contourline");
+
+            svg.append("line")
+              .attr("x1",window_x[0])
+              .attr("x2",window_x[1])
+              .attr("y1",window_y[0])
+              .attr("y2",window_y[1])
+              .style("stroke",d3.interpolateSpectral(0.))
+              .style("stroke-width",height*0.005)
+              .attr("class","contourline")
+
+          } else if (correlation == 1) {
+
+            svg.selectAll(".contourline")
+              .remove()
+
+            svg.append("rect")          // shape it as an ellipse
+              .attr("x", 	window_x[0])
+              .attr("y", 	window_y[0])
+              .attr("width", 	window_x[1] - window_x[0])
+              .attr("height", window_y[1] - window_y[0])
+              .style("fill",d3.interpolateSpectral(1.))
+              .attr("class","contourline");
+
+            svg.append("line")
+              .attr("x1",window_x[0])
+              .attr("x2",window_x[1])
+              .attr("y1",window_y[1])
+              .attr("y2",window_y[0])
+              .style("stroke",d3.interpolateSpectral(0.))
+              .style("stroke-width",height*0.005)
+              .attr("class","contourline")
+
+          } else {
+
+            var data = CopulaGaussianPdf(gridpoints,correlation);
+            data = math.divide(math.subtract(data,math.min(data)),math.max(data) - math.min(data)) // Normalize
+            
+            // Clamp data
+            data = data.map(value => Math.max(0, value));
+            data = data.map(value => Math.min(1, value));
+
+            var contoursData = contours(data);
+
+            // Create a contour projection; it's a bit more complicated so that we don't extrapolate
+            var projection = d3.geoIdentity()
+              .reflectY(true)
+              .fitExtent([[window_x[0] - (window_x[1] - window_x[0])/resolution/2, window_y[0] - (window_y[1] - window_y[0])/resolution/2], [window_x[1] + (window_x[1] - window_x[0])/resolution, window_y[1] + (window_y[1] - window_y[0])/resolution]], contoursData[0]);
+
+            var path = d3.geoPath()
+              .projection(projection);
+
+            svg.selectAll(".contourline")
+              .remove()
+
+            var paths = svg.selectAll(null)
+              .data(contoursData)
+              .enter()
+              .append("path")
+              .attr("d", path)
+              .attr("clip-path", "url(#rect-clip)") // clip the rectangle
+              .style("fill",function(d) { return d3.interpolateSpectral(1 - d.value); }) // color(d.value)
+              .style("stroke","None")
+              .attr("class","contourline");
+
+          }
+
+        } else if (copula == "clayton") {
+        
+
+          if (theta == 0) {
+
+            svg.selectAll(".contourline")
+              .remove()
+
+            svg.append("rect")          // shape it as an ellipse
+              .attr("x", 	window_x[0])
+              .attr("y", 	window_y[0])
+              .attr("width", 	window_x[1] - window_x[0])
+              .attr("height", window_y[1] - window_y[0])
+              .style("fill",d3.interpolateSpectral(0.5))
+              .attr("class","contourline");
+
+          }  else {
+          
+            var data = CopulaClaytonPdf(gridpoints,theta);
+            data = math.divide(math.subtract(data,math.min(data)),math.max(data) - math.min(data)) // Normalize
+            
+            // Clamp data
+            data = data.map(value => Math.max(0, value));
+            data = data.map(value => Math.min(1, value));
+
+            var contoursData = contours(data);
+
+            // Create a contour projection; it's a bit more complicated so that we don't extrapolate
+            var projection = d3.geoIdentity()
+              .reflectY(true)
+              .fitExtent([[window_x[0] - (window_x[1] - window_x[0])/resolution/2, window_y[0] - (window_y[1] - window_y[0])/resolution/2], [window_x[1] + (window_x[1] - window_x[0])/resolution, window_y[1] + (window_y[1] - window_y[0])/resolution]], contoursData[0]);
+
+            var path = d3.geoPath()
+              .projection(projection);
+
+            svg.selectAll(".contourline")
+              .remove()
+
+            var paths = svg.selectAll(null)
+              .data(contoursData)
+              .enter()
+              .append("path")
+              .attr("d", path)
+              .attr("clip-path", "url(#rect-clip)") // clip the rectangle
+              .style("fill",function(d) { return d3.interpolateSpectral(1 - d.value); }) // color(d.value)
+              .style("stroke","None")
+              .attr("class","contourline");
+
+          }
+        
+        } else if (copula == "gumbel") {
+        
+
+          if (theta == 1) {
+
+            svg.selectAll(".contourline")
+              .remove()
+
+            svg.append("rect")          // shape it as an ellipse
+              .attr("x", 	window_x[0])
+              .attr("y", 	window_y[0])
+              .attr("width", 	window_x[1] - window_x[0])
+              .attr("height", window_y[1] - window_y[0])
+              .style("fill",d3.interpolateSpectral(0.5))
+              .attr("class","contourline");
+
+          }  else {
+          
+            var data = CopulaGumbelPdf(gridpoints,theta);
+            data = math.divide(math.subtract(data,math.min(data)),math.max(data) - math.min(data)) // Normalize
+            
+            // Clamp data
+            data = data.map(value => Math.max(0, value));
+            data = data.map(value => Math.min(1, value));
+
+            var contoursData = contours(data);
+
+            // Create a contour projection; it's a bit more complicated so that we don't extrapolate
+            var projection = d3.geoIdentity()
+              .reflectY(true)
+              .fitExtent([[window_x[0] - (window_x[1] - window_x[0])/resolution/2, window_y[0] - (window_y[1] - window_y[0])/resolution/2], [window_x[1] + (window_x[1] - window_x[0])/resolution, window_y[1] + (window_y[1] - window_y[0])/resolution]], contoursData[0]);
+
+            var path = d3.geoPath()
+              .projection(projection);
+
+            svg.selectAll(".contourline")
+              .remove()
+
+            var paths = svg.selectAll(null)
+              .data(contoursData)
+              .enter()
+              .append("path")
+              .attr("d", path)
+              .attr("clip-path", "url(#rect-clip)") // clip the rectangle
+              .style("fill",function(d) { return d3.interpolateSpectral(1 - d.value); }) // color(d.value)
+              .style("stroke","None")
+              .attr("class","contourline");
+
+          }
+        
+        } else if (copula == "frank") {
+        
+
+          if (theta == 0) {
+
+            svg.selectAll(".contourline")
+              .remove()
+
+            svg.append("rect")          // shape it as an ellipse
+              .attr("x", 	window_x[0])
+              .attr("y", 	window_y[0])
+              .attr("width", 	window_x[1] - window_x[0])
+              .attr("height", window_y[1] - window_y[0])
+              .style("fill",d3.interpolateSpectral(0.5))
+              .attr("class","contourline");
+
+          }  else {
+          
+            var data = CopulaFrankPdf(gridpoints,theta);
+            data = math.divide(math.subtract(data,math.min(data)),math.max(data) - math.min(data)) // Normalize
+            
+            // Clamp data
+            data = data.map(value => Math.max(0, value));
+            data = data.map(value => Math.min(1, value));
+
+            var contoursData = contours(data);
+
+            // Create a contour projection; it's a bit more complicated so that we don't extrapolate
+            var projection = d3.geoIdentity()
+              .reflectY(true)
+              .fitExtent([[window_x[0] - (window_x[1] - window_x[0])/resolution/2, window_y[0] - (window_y[1] - window_y[0])/resolution/2], [window_x[1] + (window_x[1] - window_x[0])/resolution, window_y[1] + (window_y[1] - window_y[0])/resolution]], contoursData[0]);
+
+            var path = d3.geoPath()
+              .projection(projection);
+
+            svg.selectAll(".contourline")
+              .remove()
+
+            var paths = svg.selectAll(null)
+              .data(contoursData)
+              .enter()
+              .append("path")
+              .attr("d", path)
+              .attr("clip-path", "url(#rect-clip)") // clip the rectangle
+              .style("fill",function(d) { return d3.interpolateSpectral(1 - d.value); }) // color(d.value)
+              .style("stroke","None")
+              .attr("class","contourline");
+
+          }
+        
+        } else if (copula == "studentst") {
+        
+
+          if (correlation == 0) {
+
+            svg.selectAll(".contourline")
+              .remove()
+
+            svg.append("rect")          // shape it as an ellipse
+              .attr("x", 	window_x[0])
+              .attr("y", 	window_y[0])
+              .attr("width", 	window_x[1] - window_x[0])
+              .attr("height", window_y[1] - window_y[0])
+              .style("fill",d3.interpolateSpectral(0.5))
+              .attr("class","contourline");
+
+          } else if (correlation == -1) {
+
+            svg.selectAll(".contourline")
+              .remove()
+
+            svg.append("rect")          // shape it as an ellipse
+              .attr("x", 	window_x[0])
+              .attr("y", 	window_y[0])
+              .attr("width", 	window_x[1] - window_x[0])
+              .attr("height", window_y[1] - window_y[0])
+              .style("fill",d3.interpolateSpectral(1.))
+              .attr("class","contourline");
+
+            svg.append("line")
+              .attr("x1",window_x[0])
+              .attr("x2",window_x[1])
+              .attr("y1",window_y[0])
+              .attr("y2",window_y[1])
+              .style("stroke",d3.interpolateSpectral(0.))
+              .style("stroke-width",height*0.005)
+              .attr("class","contourline")
+
+          } else if (correlation == 1) {
+
+            svg.selectAll(".contourline")
+              .remove()
+
+            svg.append("rect")          // shape it as an ellipse
+              .attr("x", 	window_x[0])
+              .attr("y", 	window_y[0])
+              .attr("width", 	window_x[1] - window_x[0])
+              .attr("height", window_y[1] - window_y[0])
+              .style("fill",d3.interpolateSpectral(1.))
+              .attr("class","contourline");
+
+            svg.append("line")
+              .attr("x1",window_x[0])
+              .attr("x2",window_x[1])
+              .attr("y1",window_y[1])
+              .attr("y2",window_y[0])
+              .style("stroke",d3.interpolateSpectral(0.))
+              .style("stroke-width",height*0.005)
+              .attr("class","contourline")
+
+          } else {
+          
+            var data = CopulaStudentsTPdf(gridpoints,correlation);
+            data = math.divide(math.subtract(data,math.min(data)),math.max(data) - math.min(data)) // Normalize
+            
+            
+            
+            // Clamp data
+            data = data.map(value => Math.max(0, value));
+            data = data.map(value => Math.min(1, value));
+
+            var contoursData = contours(data);
+
+            // Create a contour projection; it's a bit more complicated so that we don't extrapolate
+            var projection = d3.geoIdentity()
+              .reflectY(true)
+              .fitExtent([[window_x[0] - (window_x[1] - window_x[0])/resolution/2, window_y[0] - (window_y[1] - window_y[0])/resolution/2], [window_x[1] + (window_x[1] - window_x[0])/resolution, window_y[1] + (window_y[1] - window_y[0])/resolution]], contoursData[0]);
+
+            var path = d3.geoPath()
+              .projection(projection);
+
+            svg.selectAll(".contourline")
+              .remove()
+
+            var paths = svg.selectAll(null)
+              .data(contoursData)
+              .enter()
+              .append("path")
+              .attr("d", path)
+              .attr("clip-path", "url(#rect-clip)") // clip the rectangle
+              .style("fill",function(d) { return d3.interpolateSpectral(1 - d.value); }) // color(d.value)
+              .style("stroke","None")
+              .attr("class","contourline");
+
+          }
+        
+        }
+      
+      }
+
+
+			// Select copula
+      function selectCopula() {
+      
+      	// Remove any pre-existing sliders
+        svg.selectAll(".copulaslider")
+          .remove()
+          
+        correlation = 0.5;
+        theta = 2;
+        degreesOfFreedom = 2;
+
+        // Draw the contours of this copula
+        drawContours()
+      
+      	if (copula == "gaussian") {
+        
+        	// Label the slider for the correlation
+          svg.append("text")             
+              .attr("transform",
+                    "translate("+(width*0.75).toString()+","+(height*0.45).toString()+")")
+              .style("text-anchor", "middle")
+              .text("correlation")
+              .style("font-family", "arial")
+              .style("font-size", (12*width/600).toString()+"px")
+              .attr("class","copulaslider")
+
+          var sliderSimple = d3
+            .sliderBottom()
+            .min(-1)
+            .max(1)
+            .width(width*0.4)
+            .height(height*0.1)
+            .ticks(5)
+            .tickPadding(0)
+            .displayValue(false)
+            .default(correlation)
+            .handle(
+              d3
+                .symbol()
+                .type(d3.symbolCircle)
+                .size(width/5)()
+            )
+            .tickFormat(d3.format(',.1f'))
+            .fill('#666')
+            .on('onchange', val => {
+              correlation = val;
+              drawContours()
+            });
+
+          var gSimple = d3
+            .select('svg')
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height)
+            .append('g')
+            .attr("id","slider_corr")
+            .attr('transform', 'translate('+width*0.55+','+height*0.5+')')
+            .attr("class","copulaslider");
+
+          gSimple.call(sliderSimple);
+        
+        } else if (copula == "clayton") {
+        
+        	// Label the slider for the correlation
+          svg.append("text")             
+              .attr("transform",
+                    "translate("+(width*0.75).toString()+","+(height*0.45).toString()+")")
+              .style("text-anchor", "middle")
+              .text("theta")
+              .style("font-family", "arial")
+              .style("font-size", (12*width/600).toString()+"px")
+              .attr("class","copulaslider")
+
+          var sliderSimple = d3
+            .sliderBottom()
+            .min(0)
+            .max(10)
+            .width(width*0.4)
+            .height(height*0.1)
+            .tickValues([0,2,4,6,8,10])
+            .tickPadding(0)
+            .displayValue(false)
+            .default(theta)
+            .handle(
+              d3
+                .symbol()
+                .type(d3.symbolCircle)
+                .size(width/5)()
+            )
+            .tickFormat(d3.format(',.0f'))
+            .fill('#666')
+            .on('onchange', val => {
+              theta = val;
+              drawContours()
+            });
+
+          var gSimple = d3
+            .select('svg')
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height)
+            .append('g')
+            .attr("id","slider_corr")
+            .attr('transform', 'translate('+width*0.55+','+height*0.5+')')
+            .attr("class","copulaslider");
+
+          gSimple.call(sliderSimple);
+        
+        } else if (copula == "gumbel") {
+        
+        	// Label the slider for the correlation
+          svg.append("text")             
+              .attr("transform",
+                    "translate("+(width*0.75).toString()+","+(height*0.45).toString()+")")
+              .style("text-anchor", "middle")
+              .text("theta")
+              .style("font-family", "arial")
+              .style("font-size", (12*width/600).toString()+"px")
+              .attr("class","copulaslider")
+
+          var sliderSimple = d3
+            .sliderBottom()
+            .min(1)
+            .max(9)
+            .width(width*0.4)
+            .height(height*0.1)
+            .tickValues([1,3,5,7,9])
+            .tickPadding(0)
+            .displayValue(false)
+            .default(theta)
+            .handle(
+              d3
+                .symbol()
+                .type(d3.symbolCircle)
+                .size(width/5)()
+            )
+            .tickFormat(d3.format(',.0f'))
+            .fill('#666')
+            .on('onchange', val => {
+              theta = val;
+              drawContours()
+            });
+
+          var gSimple = d3
+            .select('svg')
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height)
+            .append('g')
+            .attr("id","slider_corr")
+            .attr('transform', 'translate('+width*0.55+','+height*0.5+')')
+            .attr("class","copulaslider");
+
+          gSimple.call(sliderSimple);
+        
+        } else if (copula == "frank") {
+        
+        	// Label the slider for the correlation
+          svg.append("text")             
+              .attr("transform",
+                    "translate("+(width*0.75).toString()+","+(height*0.45).toString()+")")
+              .style("text-anchor", "middle")
+              .text("theta")
+              .style("font-family", "arial")
+              .style("font-size", (12*width/600).toString()+"px")
+              .attr("class","copulaslider")
+
+          var sliderSimple = d3
+            .sliderBottom()
+            .min(-15)
+            .max(15)
+            .width(width*0.4)
+            .height(height*0.1)
+            .tickValues([-15,-10,-5,0,5,10,15])
+            .tickPadding(0)
+            .displayValue(false)
+            .default(theta)
+            .handle(
+              d3
+                .symbol()
+                .type(d3.symbolCircle)
+                .size(width/5)()
+            )
+            .tickFormat(d3.format(',.0f'))
+            .fill('#666')
+            .on('onchange', val => {
+              theta = val;
+              drawContours()
+            });
+
+          var gSimple = d3
+            .select('svg')
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height)
+            .append('g')
+            .attr("id","slider_corr")
+            .attr('transform', 'translate('+width*0.55+','+height*0.5+')')
+            .attr("class","copulaslider");
+
+          gSimple.call(sliderSimple);
+        
+        } else if (copula == "studentst") {
+        
+        	// Label the slider for the correlation
+          svg.append("text")             
+              .attr("transform",
+                    "translate("+(width*0.625).toString()+","+(height*0.45).toString()+")")
+              .style("text-anchor", "middle")
+              .text("correlation")
+              .style("font-family", "arial")
+              .style("font-size", (12*width/600).toString()+"px")
+              .attr("class","copulaslider")
+
+          var sliderSimple = d3
+            .sliderBottom()
+            .min(-1)
+            .max(1)
+            .width(width*0.15)
+            .height(height*0.1)
+            .tickValues([-1,0,1])
+            .tickPadding(0)
+            .displayValue(false)
+            .default(correlation)
+            .handle(
+              d3
+                .symbol()
+                .type(d3.symbolCircle)
+                .size(width/5)()
+            )
+            .tickFormat(d3.format(',.0f'))
+            .fill('#666')
+            .on('onchange', val => {
+              correlation = val;
+              drawContours()
+            });
+
+          var gSimple = d3
+            .select('svg')
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height)
+            .append('g')
+            .attr("id","slider_corr")
+            .attr('transform', 'translate('+width*0.55+','+height*0.5+')')
+            .attr("class","copulaslider");
+
+          gSimple.call(sliderSimple);
+          
+        	// Label the slider for the degrees of freedom
+          svg.append("text")             
+              .attr("transform",
+                    "translate("+(width*0.875).toString()+","+(height*0.45).toString()+")")
+              .style("text-anchor", "middle")
+              .text("degrees of freedom")
+              .style("font-family", "arial")
+              .style("font-size", (12*width/600).toString()+"px")
+              .attr("class","copulaslider")
+          
+          var sliderSimple2 = d3
+            .sliderBottom()
+            .min(1)
+            .max(9)
+            .width(width*0.15)
+            .height(height*0.1)
+            .tickValues([1,3,5,7,9])
+            .tickPadding(0)
+            .displayValue(false)
+            .default(degreesOfFreedom)
+            .handle(
+              d3
+                .symbol()
+                .type(d3.symbolCircle)
+                .size(width/5)()
+            )
+            .tickFormat(d3.format(',.0f'))
+            .fill('#666')
+            .on('onchange', val => {
+              degreesOfFreedom = val;
+              drawContours()
+            });
+
+          var gSimple2 = d3
+            .select('svg')
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height)
+            .append('g')
+            .attr("id","slider_corr")
+            .attr('transform', 'translate('+width*0.8+','+height*0.5+')')
+            .attr("class","copulaslider");
+
+          gSimple2.call(sliderSimple2);
+        
+        }
+      
+
+      
+      
+      }
+
+  
+    </script>
+  </body>
+
+</html>

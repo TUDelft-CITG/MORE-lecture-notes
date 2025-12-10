@@ -103,3 +103,10 @@ CDF (top row) and PDF (bottom row) isolines for the Clayton copula are shown for
 
 ```
 ## Copula Sandbox
+
+````{iframe-figure} ../_static/elements/element_copula_sandbox.html
+:name: copula_sandbox
+:aspectratio: 2 / 1
+
+An interactive copula sandbox. Select a copula from the drop-down menu, then adjust the parameter sliders to see how it affects the copula's probability density.
+````
