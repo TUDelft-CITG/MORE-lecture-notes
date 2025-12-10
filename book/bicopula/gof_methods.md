@@ -33,12 +33,14 @@ To compute the semi-correlation, the following steps are undertaken:
 
 - Transform the uniform data using the standard normal distribution.
 - Partition the transformed data into the four quadrants:  
+  
   $$
   (n_{u_1} > 0,\; n_{u_2} > 0),\quad
   (n_{u_1} < 0,\; n_{u_2} > 0),\quad
   (n_{u_1} < 0,\; n_{u_2} < 0),\quad
   (n_{u_1} > 0,\; n_{u_2} < 0)
   $$
+  
 - Estimate the semi-correlation (Pearson's correlation coefficient) within each quadrant.
 - Compare the resulting correlations.
 
