@@ -26,6 +26,16 @@ parts:
           - file: LectureNotes_NS/methods_NS.md
           - file: LectureNotes_NS/methods_NS_2.md
           - file: LectureNotes_NS/ReturnPeriod_NS.md
+      - file: bicopula/intro_bicopula.md
+        title: Bivariate Copulas
+        sections:
+          - file: bicopula/multi_data_exp.md
+          - file: bicopula/bivariate_cop.md
+          - file: bicopula/cop_family.md
+          - file: bicopula/taildep.md
+          - file: bicopula/fitting.md
+          - file: bicopula/gof_methods.md
+          - file: bicopula/and_or_scenarios.md
       - file: NPBN/overview.md
         title: Non-parametric Bayesian Networks
         sections:
