@@ -77,4 +77,18 @@ f_d\left(F_d^{-1}(u_d)\right)
 }
 $$
 
+## Dependence Measure via Copulas
+
+Correlation measures such as Kendall’s $\tau$ and Spearman’s $\rho_s$ can be expressed directly in terms of the copula, highlighting that dependence is fully captured by the copula function for continuous random variables. For a continuous pair $(X_1, X_2)$ with copula $C$, these measures are given by  
+
+$$
+\tau = 4 \int_{[0,1]^2} C(u_1, u_2)\, dC(u_1, u_2) - 1,
+$$
+
+and  
+
+$$
+\rho_s = 12 \int_{[0,1]^2} u_1 u_2\, dC(u_1, u_2) - 3.
+$$
+
 
